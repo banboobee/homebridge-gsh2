@@ -1,0 +1,40 @@
+{
+    "bridge": {
+        "name": "HB GSH Test",
+        "username": "AA:BB:CC:DD:EE:02",
+        "port": 51826,
+        "pin": "031-45-154"
+    },
+    "description": "homebridge-gsh testing bridge",
+    "plugins": [
+        "homebridge-gsh",
+        "homebridge-gsh-beta",
+        "homebridge-config-ui-x"
+    ],
+    "platforms": [
+        {
+            "name": "Config",
+            "port": 8581,
+            "auth": "none",
+            "theme": "auto",
+            "tempUnits": "c",
+            "lang": "auto",
+            "sudo": false,
+            "platform": "config",
+            "debug": false
+        },
+        {
+            "name": "Google Smart Home",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Imdvb2dsZS1vYXV0aDJ8MTA1ODUzNzk1MjkwNTA0NDIyNDg1IiwiaWF0IjoxNzMwOTkxNTczfQ.IjMjg58QG2YwJu2V1_h1bD6HgqVxIAfWvz4CgThoUw8",
+            "notice": "Keep your token a secret!",
+            "debug": true,
+            "accessoryFilter": [
+                "West Bedroom"
+            ],
+            "accessoryFilterInverse": true,
+            "betaServer": true,
+            "platform": "google-smarthome"
+        }
+    ],
+    "accessories": []
+}

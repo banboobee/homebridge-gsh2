@@ -36,4 +36,4 @@ Symlink your development directory to global:
 npm link
 ```
 
-You can now run `homebridge` and it will use `homebridge-gsh` from your development directory. 
+You can now run `homebridge` and it will use `homebridge-gsh` from your development directory.

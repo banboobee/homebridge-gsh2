@@ -41,7 +41,7 @@
         "title": "Enable Debug Logging",
         "type": "boolean"
       },
-      "instanceBlacklist": {
+      "instanceDenylist": {
         "title": "Instance",
         "type": "array",
         "items": {
@@ -58,6 +58,10 @@
           "type": "string"
         }
       },
+      "accessoryFilterInverse": {
+        "title": "Invert Accessory Filter ( Change Accessory filter to only allow the names accessories, rather than deny them )",
+        "type": "boolean"
+      },
       "accessorySerialFilter": {
         "title": "Accessory",
         "type": "array",
@@ -69,6 +73,11 @@
       "forceFahrenheit": {
         "title": "Force Degrees Fahrenheit",
         "type": "boolean"
+      },
+      "betaServer": {
+        "title": "Use beta cloud server",
+        "type": "boolean",
+        "default": false
       }
     }
   },
@@ -81,12 +90,12 @@
       "items": [
         {
           "type": "help",
-          "helpvalue": "<h5>Debug Mode</h5><em class='primary-text'>Enabling debug mode can help troubleshoot problems. If you are experiencing problems with this plugin you should enable debug logging and include the results in your support request.</em>"
+          "helpvalue": "<h5><B>Debug Mode</b></h5><em class='primary-text'>Enabling debug mode can help troubleshoot problems. If you are experiencing problems with this plugin you should enable debug logging and include the results in your support request.</em>"
         },
         "debug",
         {
           "type": "help",
-          "helpvalue": "<h5>Pin Code</h5><em class='primary-text'>If you provide a pin code, the Google Assistant will prompt you for your code before performing certain actions. e.g. unlocking a Lock Mechanism.</em>"
+          "helpvalue": "<h5><B>Pin Code</b></h5><em class='primary-text'>If you provide a pin code, the Google Assistant will prompt you for your code before performing certain actions. e.g. unlocking a Lock Mechanism.</em>"
         },
         {
           "notitle": true,
@@ -101,7 +110,7 @@
         },
         {
           "type": "help",
-          "helpvalue": "<h5>Instance Blacklist</h5><em class='primary-text'>Enter the usernames of any Homebridge instances or child bridges on your network that you don't want to be able to control from the Google Assistant.</em>"
+          "helpvalue": "<h5><B>Instance deny list</b></h5><em class='primary-text'>Enter the usernames of any Homebridge instances or child bridges on your network that you don't want to be able to control from the Google Assistant.</em>"
         },
         {
           "nodescription": true,
@@ -126,7 +135,7 @@
         },
         {
           "type": "help",
-          "helpvalue": "<h5>Accessory Filter</h5><em class='primary-text'>Enter the names (as displayed in the Google Home app) of the accessories you don't want to control from the Google Assistant.</em>"
+          "helpvalue": "<h5><B>Accessory Filter - by name</b></h5><em class='primary-text'>Enter the names (as displayed in the Google Home app) of the accessories you don't want to control from the Google Assistant.</em>"
         },
         {
           "nodescription": true,
@@ -151,7 +160,12 @@
         },
         {
           "type": "help",
-          "helpvalue": "<em class='primary-text'>Enter the serial of the accessories you don't want to control from the Google Assistant.</em>"
+          "helpvalue": "<h5><B>Invert Accessory list</b></h5><em class='primary-text'>Rather than deny access to Accessory Filter names, allow only them.</em>"
+        },
+        "accessoryFilterInverse",
+        {
+          "type": "help",
+          "helpvalue": "<h5><B>Accessory Filter - by serial number</b></h5><em class='primary-text'>Enter the serial of the accessories you don't want to control from the Google Assistant.</em>"
         },
         {
           "nodescription": true,
@@ -176,9 +190,14 @@
         },
         {
           "type": "help",
-          "helpvalue": "<h5>Force Fahrenheit</h5><em class='primary-text'>Some Homebridge thermostat plugins do not correctly report they are using Fahrenheit temperature units. Enabling this option will force all thermostats accessories to display temperature units in Fahrenheit.</em>"
+          "helpvalue": "<h5><B>Force Fahrenheit</b></h5><em class='primary-text'>Some Homebridge thermostat plugins do not correctly report they are using Fahrenheit temperature units. Enabling this option will force all thermostats accessories to display temperature units in Fahrenheit.</em>"
         },
-        "forceFahrenheit"
+        "forceFahrenheit",
+        {
+          "type": "help",
+          "helpvalue": "<h5><B>Beta Cloud</b></h5><em class='primary-text'>Used for cloud server testing only.  Change plugin cloud endpoint to beta test server.</em>"
+        },
+        "betaServer"
       ]
     }
   ]

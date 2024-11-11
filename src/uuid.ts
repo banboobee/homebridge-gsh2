@@ -14,9 +14,9 @@ export function toLongFormUUID(uuid: string, base = '-0000-1000-8000-0026BB76529
   if (!VALID_SHORT_REGEX.test(uuid)) {
     throw new TypeError('uuid was not a valid UUID or short form UUID');
   }
-  if (!isValid('00000000' + base)) {
+  if (!isValid(`00000000${base}`)) {
     throw new TypeError('base was not a valid base UUID');
   }
 
-  return (('00000000' + uuid).substr(-8) + base).toUpperCase();
+  return ((`00000000${uuid}`).substr(-8) + base).toUpperCase();
 }

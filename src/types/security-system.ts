@@ -1,26 +1,19 @@
+import { ServiceType } from '@homebridge/hap-client';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class SecuritySystem {
+export class SecuritySystem extends ghToHap implements ghToHap_t {
   public twoFactorRequired = true;
   public returnStateOnExecute = true;
 
-  sync(service: HapService) {
-    return {
-      id: service.uniqueId,
+  sync(service: ServiceType) {
+
+    return this.createSyncData(service, {
       type: 'action.devices.types.SECURITYSYSTEM',
       traits: [
         'action.devices.traits.ArmDisarm',
       ],
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
       attributes: {
         availableArmLevels: {
           levels: [
@@ -33,7 +26,8 @@ export class SecuritySystem {
                 level_synonym: ['Anwesend'],
                 lang: 'de',
               }],
-            }, {
+            },
+            {
               level_name: 'AWAY',
               level_values: [{
                 level_synonym: ['Away'],
@@ -42,7 +36,8 @@ export class SecuritySystem {
                 level_synonym: ['Abwesend'],
                 lang: 'de',
               }],
-            }, {
+            },
+            {
               level_name: 'NIGHT',
               level_values: [{
                 level_synonym: ['Night'],
@@ -56,21 +51,11 @@ export class SecuritySystem {
           ordered: true,
         },
       },
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
+
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     const availableSystemCurrentStates = ['HOME', 'AWAY', 'NIGHT', 'OFF'];
 
     const response = {
@@ -79,7 +64,7 @@ export class SecuritySystem {
       status: 'SUCCESS',
     } as any;
 
-    const securitySystemCurrentState = service.characteristics.find(x => x.type === Characteristic.SecuritySystemCurrentState).value;
+    const securitySystemCurrentState: number = Number(service.serviceCharacteristics.find(x => x.uuid === Characteristic.SecuritySystemCurrentState).value);
 
     const currentArmLevel = availableSystemCurrentStates[securitySystemCurrentState];
 
@@ -93,9 +78,9 @@ export class SecuritySystem {
     return response;
   }
 
-  execute(service: HapService, command): AccessoryTypeExecuteResponse {
+  async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
     if (!command.execution.length) {
-      return { payload: { characteristics: [] } };
+      return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
     }
 
     switch (command.execution[0].command) {
@@ -115,21 +100,15 @@ export class SecuritySystem {
           securitySystemTargetState = mode.OFF;
         }
 
-        const payload = {
-          characteristics: [{
-            aid: service.aid,
-            iid: service.characteristics.find(x => x.type === Characteristic.SecuritySystemTargetState).iid,
-            value: securitySystemTargetState,
-          }],
-        };
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.SecuritySystemTargetState).setValue(securitySystemTargetState);
 
         const states = {
           isArmed: command.execution[0].params.arm,
           currentArmLevel: command.execution[0].params.armLevel,
         };
-
-        return { payload, states };
+        return { ids: [service.uniqueId], status: 'SUCCESS', states };
       }
+      default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }
     }
   }
 

@@ -2,9 +2,9 @@
  * Homebridge Entry Point
  */
 
-import * as path from 'path';
-import * as fs from 'fs-extra';
 import type { API } from 'homebridge';
+import * as path from 'node:path';
+import * as fs from 'fs-extra';
 import { PluginConfig } from './interfaces';
 
 export class HomebridgeGoogleSmartHome {

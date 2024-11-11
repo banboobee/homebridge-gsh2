@@ -2,10 +2,9 @@
  * This is used to run the plugin during development
  */
 
+import * as os from 'node:os';
+import * as path from 'node:path';
 import * as fs from 'fs-extra';
-import * as os from 'os';
-import * as path from 'path';
-import * as chalk from 'chalk';
 
 import { Plugin } from './main';
 

@@ -26,4 +26,8 @@ export class Log {
   error(msg) {
     this.logger.error(msg);
   }
+
+  log(msg) {
+    this.logger.info(msg);
+  }
 }

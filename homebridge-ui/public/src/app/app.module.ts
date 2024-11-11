@@ -1,11 +1,10 @@
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgModule } from '@angular/core'
+import { BrowserModule } from '@angular/platform-browser'
 
-import '@homebridge/plugin-ui-utils/dist/ui.interface';
+import { AppComponent } from './app.component'
 
-import { AppComponent } from './app.component';
-import { TranslatePipe } from './translate.pipe';
+import { TranslatePipe } from './translate.pipe'
+import '@homebridge/plugin-ui-utils/dist/ui.interface'
 
 @NgModule({
   declarations: [
@@ -16,6 +15,6 @@ import { TranslatePipe } from './translate.pipe';
     BrowserModule,
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule { }

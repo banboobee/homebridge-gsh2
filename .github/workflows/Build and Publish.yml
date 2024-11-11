@@ -1,5 +1,5 @@
 name:
-  "Build, Publish and Release"
+  'Build, Publish and Release'
 
   #
   # Automatically publish beta releases on pushes, require a manual workflow action for production releases
@@ -102,7 +102,7 @@ jobs:
     with:
       tag: ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
       dynamically_adjust_version: true
-      npm_version_command: "pre"
+      npm_version_command: pre
       pre_id: ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
       install_cmd: npm ci && cd homebridge-ui/public && npm ci
     secrets:

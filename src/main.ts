@@ -1,16 +1,17 @@
-import * as crypto from 'crypto';
-import { WebSocket } from '@oznu/ws-connect';
-import * as querystring from 'querystring';
+import * as crypto from 'node:crypto';
+import * as path from 'node:path';
+import * as querystring from 'node:querystring';
+import { WebSocket } from '@homebridge/ws-connect';
 import * as fs from 'fs-extra';
-import * as path from 'path';
 
+import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
-import { Hap } from './hap';
+import { SERVER_ADDRESS } from './settings';
 
 export class Plugin {
   public log: Log;
-  public config;
+  public config: PluginConfig;
   public homebridgeConfig;
   public hap: Hap;
 
@@ -29,8 +30,13 @@ export class Plugin {
       n: this.package.name,
     };
 
-    // establish new websocket connection
-    const socket = new WebSocket(`wss://homebridge-gsh.iot.oz.nu/socket?${querystring.stringify(qs)}`);
+    const serverUrl = this.config.betaServer ? `wss://${SERVER_ADDRESS.beta}/socket` : `wss://${SERVER_ADDRESS.prod}/socket`;
+
+    if (this.config.betaServer) {
+      this.log.warn(`Using beta server ${serverUrl}`);
+    }
+
+    const socket = new WebSocket(`${serverUrl}?${querystring.stringify(qs)}`);
 
     this.hap = new Hap(socket, this.log, this.homebridgeConfig.bridge.pin, this.config);
 
@@ -96,7 +102,7 @@ export class Plugin {
       return this.deviceNotReady(body);
     }
 
-    this.log.debug(devices);
+    // this.log.debug(devices);
 
     return {
       requestId: body.requestId,

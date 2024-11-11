@@ -1,3 +1,5 @@
+import { ServiceType } from '@homebridge/hap-client';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { PlatformConfig } from 'homebridge';
 
 export interface PluginConfig extends PlatformConfig {
@@ -9,8 +11,10 @@ export interface PluginConfig extends PlatformConfig {
   disablePinCodeRequirement?: boolean;
   instanceBlacklist?: Array<string>;
   accessoryFilter?: Array<string>;
+  accessoryFilterInverse?: boolean;
   accessorySerialFilter?: Array<string>;
   forceFahrenheit?: boolean;
+  betaServer?: boolean;
 }
 
 export interface Instance {
@@ -48,12 +52,12 @@ export interface HapCharacteristic {
 export interface HapService {
   iid: number;
   type: string;
-  characteristics: HapCharacteristic[];
-  primary: boolean;
-  hidden: boolean;
-  serialNumber: string;
+  characteristics?: HapCharacteristic[];
+  primary?: boolean;
+  hidden?: boolean;
+  serialNumber?: string;
 
-  // custom  
+  // custom
   uniqueId?: string;
   serviceName?: string;
   accessoryInformation?: any;
@@ -96,8 +100,12 @@ export interface HapInstance {
 }
 
 export interface AccessoryTypeExecuteResponse {
-  payload: {
-    characteristics: { aid: number; iid: number; value: any }[];
-  };
+  payload?: any;
   states?: undefined | Record<string, any>;
+}
+
+export interface HapDevice {
+  sync: (service: ServiceType) => Record<string, any>;
+  query: (service: ServiceType) => Record<string, any>;
+  execute: (service: ServiceType, command: SmartHomeV1ExecuteRequestCommands) => Promise<SmartHomeV1ExecuteResponseCommands>;
 }

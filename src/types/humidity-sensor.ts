@@ -1,52 +1,31 @@
-import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
+import { ServiceType } from '@homebridge/hap-client';
 import { Characteristic } from '../hap-types';
-import { HapService, AccessoryTypeExecuteResponse } from '../interfaces';
+import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class HumiditySensor {
-  sync(service: HapService): SmartHomeV1SyncDevices {
-    return {
-      id: service.uniqueId,
+export class HumiditySensor extends ghToHap implements ghToHap_t {
+  sync(service: ServiceType): SmartHomeV1SyncDevices {
+
+    return this.createSyncData(service, {
       type: 'action.devices.types.SENSOR',
-      traits: [
-        'action.devices.traits.HumiditySetting',
-      ],
-      name: {
-        defaultNames: [
-          service.serviceName,
-          service.accessoryInformation.Name,
-        ],
-        name: service.serviceName,
-        nicknames: [],
-      },
-      willReportState: true,
+      traits: ['action.devices.traits.HumiditySetting'],
       attributes: {
         queryOnlyHumiditySetting: true,
       },
-      deviceInfo: {
-        manufacturer: service.accessoryInformation.Manufacturer,
-        model: service.accessoryInformation.Model,
-        hwVersion: service.accessoryInformation.HardwareRevision,
-        swVersion: service.accessoryInformation.SoftwareRevision,
-      },
-      customData: {
-        aid: service.aid,
-        iid: service.iid,
-        instanceUsername: service.instance.username,
-        instanceIpAddress: service.instance.ipAddress,
-        instancePort: service.instance.port,
-      },
-    };
+    });
   }
 
-  query(service: HapService) {
+  query(service: ServiceType) {
     return {
       online: true,
-      humidityAmbientPercent: service.characteristics.find(x => x.type === Characteristic.CurrentRelativeHumidity)?.value,
+      humidityAmbientPercent: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentRelativeHumidity)?.value,
     } as any;
   }
 
-  execute(service: HapService, command: SmartHomeV1ExecuteRequestCommands): AccessoryTypeExecuteResponse {
-    return { payload: { characteristics: [] } };
+  async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
+    if (!command.execution.length) {
+      return { ids: [service.uniqueId], status: 'ERROR', debugString: 'missing command' };
+    }
+    return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
   }
-
 }
