@@ -155,7 +155,7 @@ export class Hap {
       this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
       this.start();
       this.requestSync();
-      this.hapClient.on('instance-discovered', this.requestSync.bind(this));  // Request sync on new instance discovery
+      this.hapClient.on('instance-discovered', this.requestSync);  // Request sync on new instance discovery
     }, 5000);
   };
 
