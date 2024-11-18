@@ -6,6 +6,10 @@ All notable changes to `homebridge-gsh` will be documented in this file. This pr
 
 ### Changes
 
+### Fixes
+
+- Fixed an issue where the plugin restarted when another child bridge restarted.
+
 ## v3.1.0 (2024-11-11)
 
 ### Changes
