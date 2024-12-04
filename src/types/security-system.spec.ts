@@ -396,6 +396,7 @@ const securitySystemServiceOnOff: ServiceType = {
     port: 46283,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
   refreshCharacteristics,

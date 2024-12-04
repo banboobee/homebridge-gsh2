@@ -1,5 +1,5 @@
-import { expect } from '@jest/globals';
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
+import { expect } from '@jest/globals';
 import { Door } from './door';
 
 const door = new Door();
@@ -301,6 +301,7 @@ const doorServiceOnOff: ServiceType = {
     port: 46283,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
   refreshCharacteristics,
@@ -396,6 +397,7 @@ const doorServiceDimmer: ServiceType = {
     port: 46283,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   uniqueId: '028fc478c0b4b116ead9be0dc8a72251b351b745cbc3961704268737101c803d',
   refreshCharacteristics,

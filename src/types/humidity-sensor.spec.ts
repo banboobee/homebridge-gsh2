@@ -286,6 +286,7 @@ const humiditySensorTemp: ServiceType = {
     'port': 51830,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248657',
 };
@@ -357,6 +358,7 @@ const humiditySensorServiceOnOff: ServiceType = {
     port: 46283,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
   refreshCharacteristics,
@@ -452,6 +454,7 @@ const humiditySensorServiceDimmer: ServiceType = {
     port: 46283,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   uniqueId: '028fc478c0b4b116ead9be0dc8a72251b351b745cbc3961704268737101c803d',
   refreshCharacteristics,
