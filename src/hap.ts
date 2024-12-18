@@ -8,6 +8,7 @@ import { PluginConfig } from './interfaces';
 import { Log } from './logger';
 import { Door } from './types/door';
 
+import { createHash } from 'node:crypto';
 import { Fan } from './types/fan';
 import { Fanv2 } from './types/fan-v2';
 import { GarageDoorOpener } from './types/garage-door-opener';
@@ -22,7 +23,6 @@ import { TemperatureSensor } from './types/temperature-sensor';
 import { Thermostat } from './types/thermostat';
 import { Window } from './types/window';
 import { WindowCovering } from './types/window-covering';
-import { createHash } from 'node:crypto';
 
 export class Hap {
   socket;
@@ -101,7 +101,7 @@ export class Hap {
     this.accessoryFilter = config.accessoryFilter || [];
     this.accessoryFilterInverse = config.accessoryFilterInverse || false;
     this.accessorySerialFilter = config.accessorySerialFilter || [];
-    this.instanceBlacklist = config.instanceBlacklist || [];
+    this.instanceBlacklist = config.instanceDenylist || [];
 
     this.log.debug('Waiting 15 seconds before starting instance discovery...');
     this.startTimeout = setTimeout(() => {
@@ -155,7 +155,7 @@ export class Hap {
       this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
       this.start();
       this.requestSync();
-      this.hapClient.on('instance-discovered', this.requestSync);  // Request sync on new instance discovery
+      this.hapClient.on('instance-discovered', this.requestSync.bind(this));  // Request sync on new instance discovery
     }, 5000);
   };
 

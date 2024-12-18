@@ -2,6 +2,15 @@
 
 All notable changes to `homebridge-gsh` will be documented in this file. This project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## v3.1.1 (2024-12-05)
+
+### Changes
+
+### Fixes
+
+- Fixed an issue where the plugin restarted when another child bridge restarted.
+- Dependency Updates
+
 ## v3.1.0 (2024-11-11)
 
 ### Changes

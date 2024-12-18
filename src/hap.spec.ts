@@ -1,12 +1,10 @@
-import { describe, it, expect } from '@jest/globals';
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
-import { SmartHomeV1QueryRequestDevices, SmartHomeV1SyncDevices, SmartHomeV1ExecuteRequestCommands } from 'actions-on-google';
+import { describe, expect } from '@jest/globals';
+import { SmartHomeV1QueryRequestDevices, SmartHomeV1SyncDevices } from 'actions-on-google';
+import { expectType } from 'ts-expect';
 import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
-import fs from 'node:fs';
-import { expectType } from 'ts-expect';
-import exp from 'node:constants';
 
 // socket, log, pin: string, config: PluginConfig
 
@@ -613,6 +611,7 @@ const hapServiceHue: ServiceType = {
     port: 46283,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   uniqueId: '2a1f1a87419c2afbd847828b96095f892975c36572751ab71f53edf0c5372fdb',
   refreshCharacteristics,
@@ -687,6 +686,7 @@ const hapServiceOnOff: ServiceType = {
     port: 46283,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   uniqueId: '664195d5556f1e0b424ed32bcd863ec8954c76f8ab81cc399f0e24f8827806d1',
   refreshCharacteristics,
@@ -782,6 +782,7 @@ const hapServiceDimmer: ServiceType = {
     port: 46283,
     connectionFailedCount: 0,
     services: [],
+    configurationNumber: 1,
   },
   uniqueId: '028fc478c0b4b116ead9be0dc8a72251b351b745cbc3961704268737101c803d',
   refreshCharacteristics,
