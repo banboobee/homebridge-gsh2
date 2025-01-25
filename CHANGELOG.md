@@ -2,6 +2,15 @@
 
 All notable changes to `homebridge-gsh` will be documented in this file. This project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## v3.1.2 (2025-01-25)
+
+### Changes
+
+### Fixes
+
+- Fixed an issue with Security Services, and automations not triggering on Security Mode changes
+- Fixed an issue with hap event processing, and not handling concurrent events
+  
 ## v3.1.1 (2024-12-05)
 
 ### Changes

@@ -61,7 +61,7 @@ export class SecuritySystem extends ghToHap implements ghToHap_t {
     const response = {
       on: true,
       online: true,
-      status: 'SUCCESS',
+      //  status: 'SUCCESS',
     } as any;
 
     const securitySystemCurrentState: number = Number(service.serviceCharacteristics.find(x => x.uuid === Characteristic.SecuritySystemCurrentState).value);
