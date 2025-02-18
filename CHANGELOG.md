@@ -2,14 +2,20 @@
 
 All notable changes to `homebridge-gsh` will be documented in this file. This project tries to adhere to [Semantic Versioning](http://semver.org/).
 
-## v3.1.2 (2025-01-25)
+## v3.1.2 (2025-02-18)
 
 ### Changes
+
+- New feature for Heater Cooler devices and the ability to have it be an AC Unit - #13 Tks @noamcohen97 
 
 ### Fixes
 
 - Fixed an issue with Security Services, and automations not triggering on Security Mode changes
 - Fixed an issue with hap event processing, and not handling concurrent events
+
+### Outstanding Issue
+
+- Changing thermostat modes - not working #12
   
 ## v3.1.1 (2024-12-05)
 
