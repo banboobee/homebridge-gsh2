@@ -172,7 +172,11 @@ export class Hap {
 
     const monitor = await this.hapClient.monitorCharacteristics(evServices);
     monitor.on('service-update', (services) => {
-      this.reportStateSubject.next(services[0].uniqueId);
+      // this.log.debug(`Service Update ${services}`);
+      services.map((service: any) => {
+        this.reportStateSubject.next(service.uniqueId);
+      });
+      // this.reportStateSubject.next(services[0].uniqueId);
     });
   }
 
