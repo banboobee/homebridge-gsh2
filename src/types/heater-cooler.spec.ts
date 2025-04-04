@@ -33,7 +33,7 @@ const config: PluginConfig = {
 
 const log = new Log(console, true);
 
-const hap = new Hap(socketMock, log, '031-45-154', config);
+const hap = new Hap(socketMock, log, '031-45-154', config, {});
 
 const heaterCooler = new HeaterCooler(hap);
 
@@ -107,140 +107,147 @@ describe('heaterCooler', () => {
       expect(response.attributes.thermostatTemperatureUnit).toBeDefined();
       // await sleep(10000)
     });
-    it('heaterCooler ac as ac_unit', async () => {
-      const hap = new Hap(socketMock, log, '031-45-154', { ...config, showHeaterCoolerAsACUnit: true });
-      const heaterCooler = new HeaterCooler(hap);
-      const response: any = heaterCooler.sync(heaterCoolerAC);
-      expect(response).toBeDefined();
-      expect(response.type).toBe('action.devices.types.AC_UNIT');
-      expect(response.type).not.toBe('action.devices.types.THERMOSTAT');
-      expect(response.traits).toContain('action.devices.traits.TemperatureSetting');
-      expect(response.traits).toContain('action.devices.traits.OnOff');
-      expect(response.traits).toContain('action.devices.traits.FanSpeed');
-      expect(response.traits).not.toContain('action.devices.traits.Brightness');
-      expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
-      expect(response.attributes).toBeDefined();
-      expect(response.attributes.commandOnlyOnOff).toBe(false);
-      expect(response.attributes.queryOnlyOnOff).toBe(false);
-      expect(response.attributes.supportsFanSpeedPercent).toBe(true);
-      expect(response.attributes.availableThermostatModes).toBeDefined();
-      expect(response.attributes.availableThermostatModes).toContain('off');
-      expect(response.attributes.availableThermostatModes).toContain('heat');
-      expect(response.attributes.availableThermostatModes).toContain('cool');
-      expect(response.attributes.availableThermostatModes).toContain('heatcool');
-      expect(response.attributes.availableThermostatModes).not.toContain('auto');
-      expect(response.attributes.thermostatTemperatureUnit).toBeDefined();
-    });
-  });
+    describe('showHeaterCoolerAsACUnit', () => {
+      const hap = new Hap(socketMock, log, '031-45-154', { ...config, showHeaterCoolerAsACUnit: true }, {});
+      it('heaterCooler ac as ac_unit', async () => {
+        const heaterCooler = new HeaterCooler(hap);
+        const response: any = heaterCooler.sync(heaterCoolerAC);
+        expect(response).toBeDefined();
+        expect(response.type).toBe('action.devices.types.AC_UNIT');
+        expect(response.type).not.toBe('action.devices.types.THERMOSTAT');
+        expect(response.traits).toContain('action.devices.traits.TemperatureSetting');
+        expect(response.traits).toContain('action.devices.traits.OnOff');
+        expect(response.traits).toContain('action.devices.traits.FanSpeed');
+        expect(response.traits).not.toContain('action.devices.traits.Brightness');
+        expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
+        expect(response.attributes).toBeDefined();
+        expect(response.attributes.commandOnlyOnOff).toBe(false);
+        expect(response.attributes.queryOnlyOnOff).toBe(false);
+        expect(response.attributes.supportsFanSpeedPercent).toBe(true);
+        expect(response.attributes.availableThermostatModes).toBeDefined();
+        expect(response.attributes.availableThermostatModes).toContain('off');
+        expect(response.attributes.availableThermostatModes).toContain('heat');
+        expect(response.attributes.availableThermostatModes).toContain('cool');
+        expect(response.attributes.availableThermostatModes).toContain('heatcool');
+        expect(response.attributes.availableThermostatModes).not.toContain('auto');
+        expect(response.attributes.thermostatTemperatureUnit).toBeDefined();
 
-  describe('query message', () => {
-    it('heaterCooler heat and cool', async () => {
-      const response = heaterCooler.query(heaterCoolerTemp);
-      expect(response).toBeDefined();
-      expect(response.online).toBeDefined();
-      expect(response.on).toBeDefined();
-      expect(response.thermostatMode).toBeDefined();
-      expect(response.thermostatTemperatureAmbient).toBeDefined();
-      expect(response.thermostatTemperatureSetpoint).toBeDefined();
-      expect(response.currentFanSpeedPercent).toBeUndefined();
-      // await sleep(10000)
+      });
+      afterAll(() => {
+        hap.destroy();
+      });
     });
 
-    it('heaterCooler cool only', async () => {
-      const response = heaterCooler.query(heaterCoolerNoHeat);
-      expect(response).toBeDefined();
-      expect(response.online).toBeDefined();
-      expect(response.on).toBeDefined();
-      expect(response.thermostatMode).toBeDefined();
-      expect(response.thermostatTemperatureAmbient).toBeDefined();
-      expect(response.currentFanSpeedPercent).toBeUndefined();
-      // await sleep(10000)
+    describe('query message', () => {
+      it('heaterCooler heat and cool', async () => {
+        const response = heaterCooler.query(heaterCoolerTemp);
+        expect(response).toBeDefined();
+        expect(response.online).toBeDefined();
+        expect(response.on).toBeDefined();
+        expect(response.thermostatMode).toBeDefined();
+        expect(response.thermostatTemperatureAmbient).toBeDefined();
+        expect(response.thermostatTemperatureSetpoint).toBeDefined();
+        expect(response.currentFanSpeedPercent).toBeUndefined();
+        // await sleep(10000)
+      });
+
+      it('heaterCooler cool only', async () => {
+        const response = heaterCooler.query(heaterCoolerNoHeat);
+        expect(response).toBeDefined();
+        expect(response.online).toBeDefined();
+        expect(response.on).toBeDefined();
+        expect(response.thermostatMode).toBeDefined();
+        expect(response.thermostatTemperatureAmbient).toBeDefined();
+        expect(response.currentFanSpeedPercent).toBeUndefined();
+        // await sleep(10000)
+      });
+
+      it('heaterCooler ac', async () => {
+        const response = heaterCooler.query(heaterCoolerAC);
+        expect(response).toBeDefined();
+        expect(response.online).toBeDefined();
+        expect(response.on).toBeDefined();
+        expect(response.thermostatMode).toBeDefined();
+        expect(response.thermostatTemperatureAmbient).toBeDefined();
+        expect(response.currentFanSpeedPercent).toBeDefined();
+        // await sleep(10000)
+      });
     });
 
-    it('heaterCooler ac', async () => {
-      const response = heaterCooler.query(heaterCoolerAC);
-      expect(response).toBeDefined();
-      expect(response.online).toBeDefined();
-      expect(response.on).toBeDefined();
-      expect(response.thermostatMode).toBeDefined();
-      expect(response.thermostatTemperatureAmbient).toBeDefined();
-      expect(response.currentFanSpeedPercent).toBeDefined();
-      // await sleep(10000)
-    });
-  });
+    describe('execute message', () => {
+      it('heaterCooler - setMode', async () => {
+        const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatSetModeOff);
+        expect(response).toBeDefined();
+        expect(response.ids).toBeDefined();
+        expect(response.status).toBe('SUCCESS');
+        // await sleep(10000)
+      });
 
-  describe('execute message', () => {
-    it('heaterCooler - setMode', async () => {
-      const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatSetModeOff);
-      expect(response).toBeDefined();
-      expect(response.ids).toBeDefined();
-      expect(response.status).toBe('SUCCESS');
-      // await sleep(10000)
-    });
+      it('heaterCooler - setTemp', async () => {
+        const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatTemperatureSetpoint);
+        expect(response).toBeDefined();
+        expect(response.ids).toBeDefined();
+        expect(response.status).toBe('SUCCESS');
+        // await sleep(10000)
+      });
 
-    it('heaterCooler - setTemp', async () => {
-      const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatTemperatureSetpoint);
-      expect(response).toBeDefined();
-      expect(response.ids).toBeDefined();
-      expect(response.status).toBe('SUCCESS');
-      // await sleep(10000)
-    });
+      it('heaterCooler - setRange', async () => {
+        const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatTemperatureSetRange);
+        expect(response).toBeDefined();
+        expect(response.ids).toBeDefined();
+        expect(response.status).toBe('SUCCESS');
+        // await sleep(10000)
+      });
 
-    it('heaterCooler - setRange', async () => {
-      const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatTemperatureSetRange);
-      expect(response).toBeDefined();
-      expect(response.ids).toBeDefined();
-      expect(response.status).toBe('SUCCESS');
-      // await sleep(10000)
-    });
+      it('heaterCooler - setOnOff', async () => {
+        const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatOff);
+        expect(response).toBeDefined();
+        expect(response.ids).toBeDefined();
+        expect(response.status).toBe('SUCCESS');
+        // await sleep(10000)
+      });
 
-    it('heaterCooler - setOnOff', async () => {
-      const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatOff);
-      expect(response).toBeDefined();
-      expect(response.ids).toBeDefined();
-      expect(response.status).toBe('SUCCESS');
-      // await sleep(10000)
-    });
+      it('heaterCooler - setFanSpeed', async () => {
+        const response = await heaterCooler.execute(heaterCoolerAC, commandThermostatSetFanSpeed);
+        expect(response).toBeDefined();
+        expect(response.ids).toBeDefined();
+        expect(response.status).toBe('SUCCESS');
+        // await sleep(10000)
+      });
 
-    it('heaterCooler - setFanSpeed', async () => {
-      const response = await heaterCooler.execute(heaterCoolerAC, commandThermostatSetFanSpeed);
-      expect(response).toBeDefined();
-      expect(response.ids).toBeDefined();
-      expect(response.status).toBe('SUCCESS');
-      // await sleep(10000)
-    });
+      it('heaterCooler - setFanSpeed fails', async () => {
+        const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatSetFanSpeed);
+        expect(response).toBeDefined();
+        expect(response.ids).toBeDefined();
+        expect(response.status).toBe('ERROR');
+        // await sleep(10000)
+      });
 
-    it('heaterCooler - setFanSpeed fails', async () => {
-      const response = await heaterCooler.execute(heaterCoolerTemp, commandThermostatSetFanSpeed);
-      expect(response).toBeDefined();
-      expect(response.ids).toBeDefined();
-      expect(response.status).toBe('ERROR');
-      // await sleep(10000)
-    });
+      it('heaterCooler  - commandMalformed', async () => {
+        const response = await heaterCooler.execute(heaterCoolerTemp, commandMalformed);
+        expect(response).toBeDefined();
+        expect(response.ids).toBeDefined();
+        expect(response.status).toBe('ERROR');
+      });
 
-    it('heaterCooler  - commandMalformed', async () => {
-      const response = await heaterCooler.execute(heaterCoolerTemp, commandMalformed);
-      expect(response).toBeDefined();
-      expect(response.ids).toBeDefined();
-      expect(response.status).toBe('ERROR');
-    });
+      it('heaterCooler  - commandIncorrectCommand', async () => {
+        const response = await heaterCooler.execute(heaterCoolerTemp, commandIncorrectCommand);
+        expect(response).toBeDefined();
+        expect(response.ids).toBeDefined();
+        expect(response.status).toBe('ERROR');
+      });
 
-    it('heaterCooler  - commandIncorrectCommand', async () => {
-      const response = await heaterCooler.execute(heaterCoolerTemp, commandIncorrectCommand);
-      expect(response).toBeDefined();
-      expect(response.ids).toBeDefined();
-      expect(response.status).toBe('ERROR');
-    });
-
-    it('heaterCooler  - Error', async () => {
-      expect.assertions(1);
-      heaterCoolerTemp.serviceCharacteristics[0].setValue = setValueError;
-      // const response = heaterCooler.execute(heaterCoolerTemp, commandThermostatSetModeOff);
-      expect(heaterCooler.execute(heaterCoolerTemp, commandThermostatSetModeOff)).rejects.toThrow('Error setting value');
-      // await sleep(10000)
+      it('heaterCooler  - Error', async () => {
+        expect.assertions(1);
+        heaterCoolerTemp.serviceCharacteristics[0].setValue = setValueError;
+        // const response = heaterCooler.execute(heaterCoolerTemp, commandThermostatSetModeOff);
+        expect(heaterCooler.execute(heaterCoolerTemp, commandThermostatSetModeOff)).rejects.toThrow('Error setting value');
+        // await sleep(10000)
+      });
     });
   });
   afterAll(async () => {
+    console.log('destroy');
     await hap.destroy();
   });
 });

@@ -2,6 +2,16 @@
 
 All notable changes to `homebridge-gsh` will be documented in this file. This project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## v3.1.3 (2025-04-18)
+
+### Fixes
+
+- Fix for Thermostat changing modes - Error executing command #12
+
+### Changes
+
+- Added new feature to debug mode, logging of the discovered homebridge services to `homebridge-gsh-discovery.json`.  To assist in debugging of issues
+
 ## v3.1.2 (2025-02-18)
 
 ### Changes

@@ -34,7 +34,7 @@ const config: PluginConfig = {
 
 const log = new Log(console, true);
 
-const hap = new Hap(socketMock, log, '031-45-154', config);
+const hap = new Hap(socketMock, log, '031-45-154', config, {});
 
 const thermostat = new Thermostat(hap);
 
@@ -140,7 +140,8 @@ describe('thermostat', () => {
 
     it('thermostat  - Error', async () => {
       expect.assertions(1);
-      thermostatTemp.serviceCharacteristics[0].setValue = setValueError;
+      thermostatTemp.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetHeatingCoolingState).setValue = setValueError;
+      // thermostatTemp.serviceCharacteristics[0].setValue = setValueError;
       // const response = thermostat.execute(thermostatTemp, commandThermostatSetModeOff);
       expect(thermostat.execute(thermostatTemp, commandThermostatSetModeOff)).rejects.toThrow('Error setting value');
       // await sleep(10000)
@@ -295,7 +296,7 @@ const thermostatTemp: ServiceType = {
       type: 'TargetHeaterCoolerState',
       serviceType: 'Active',
       serviceName: 'Shed Light',
-      description: 'Configured Name',
+      description: 'TargetHeaterCoolerState',
       value: 1,
       format: 'string',
       perms: ['ev', 'pr', 'pw'],
@@ -311,7 +312,7 @@ const thermostatTemp: ServiceType = {
     },
     {
       aid: 13,
-      iid: 11,
+      iid: 9,
       uuid: '000000B0-0000-1000-8000-0026BB765291',
       type: 'ConfiguredName',
       serviceType: 'Active',
@@ -463,7 +464,7 @@ const thermostatTemp: ServiceType = {
       type: 'TargetHeatingCoolingState',
       serviceType: 'TargetHeatingCoolingState',
       serviceName: 'Shed Light',
-      description: 'Configured Name',
+      description: 'TargetHeatingCoolingState',
       value: 1,
       format: 'string',
       perms: ['ev', 'pr', 'pw'],
@@ -623,7 +624,7 @@ const thermostatNoHeat: ServiceType = {
       type: 'TargetHeatingCoolingState',
       serviceType: 'TargetHeatingCoolingState',
       serviceName: 'Shed Light',
-      description: 'Configured Name',
+      description: 'TargetHeatingCoolingState',
       value: 1,
       format: 'string',
       perms: ['ev', 'pr', 'pw'],

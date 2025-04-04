@@ -25,14 +25,15 @@
         },
         {
             "name": "Google Smart Home",
-            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Imdvb2dsZS1vYXV0aDJ8MTA1ODUzNzk1MjkwNTA0NDIyNDg1IiwiaWF0IjoxNzMwOTkxNTczfQ.IjMjg58QG2YwJu2V1_h1bD6HgqVxIAfWvz4CgThoUw8",
+            "token": "fdfdsfdfdfd",
             "notice": "Keep your token a secret!",
             "debug": true,
             "accessoryFilter": [
-                "West Bedroom"
+                "West Bedroom",
+                "Wasaga"
             ],
             "accessoryFilterInverse": true,
-            "betaServer": true,
+            "betaServer": false,
             "platform": "google-smarthome"
         }
     ],

@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 
-import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
@@ -82,7 +82,7 @@ export class Thermostat extends ghToHap implements ghToHap_t {
           auto: 3,
           heatcool: 3,
         };
-        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetHeaterCoolerState).setValue(mode[command.execution[0].params.thermostatMode]);
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.TargetHeatingCoolingState).setValue(mode[command.execution[0].params.thermostatMode]);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.ThermostatTemperatureSetpoint'): {

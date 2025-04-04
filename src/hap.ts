@@ -8,6 +8,7 @@ import { PluginConfig } from './interfaces';
 import { Log } from './logger';
 import { Door } from './types/door';
 
+import type { API } from 'homebridge';
 import { createHash } from 'node:crypto';
 import { Fan } from './types/fan';
 import { Fanv2 } from './types/fan-v2';
@@ -34,6 +35,7 @@ export class Hap {
   private startTimeout: NodeJS.Timeout;
   private discoveryTimeout: NodeJS.Timeout;
   private syncTimeout: NodeJS.Timeout;
+  private api: API;
 
   public ready: boolean;
 
@@ -92,11 +94,12 @@ export class Hap {
   accessorySerialFilter: Array<string> = [];
   // deviceNameMap: Array<{ replace: string; with: string }> = [];
 
-  constructor(socket, log, pin: string, config: PluginConfig) {
+  constructor(socket, log, pin: string, config: PluginConfig, api) {
     this.config = config;
     this.socket = socket;
     this.log = log;
     this.pin = pin;
+    this.api = api;
 
     this.accessoryFilter = config.accessoryFilter || [];
     this.accessoryFilterInverse = config.accessoryFilterInverse || false;
@@ -264,6 +267,11 @@ export class Hap {
             try {
               response.push(await this.types[service.type].execute(service, command));
             } catch (error) {
+              if (this.config.debug) {
+                this.log.debug(`Error executing service: ${JSON.stringify(service)}`);
+                this.log.debug(`Error executing command: ${JSON.stringify(command)}`);
+                this.log.debug(error);
+              }
               this.log.error(`Error executing command: ${error.message}`);
               response.push({
                 ids: [device.id],
@@ -298,6 +306,12 @@ export class Hap {
    */
   public async loadAccessories(): Promise<ServiceType[]> {
     return this.hapClient.getAllServices().then((services) => {
+      if (this.config.debug && process.uptime() < 300) {
+        const fs = require('fs');
+        const storagePath = this.api.user.storagePath() + '/homebridge-gsh-discovery.json';
+        this.log.warn(`Writing Discovery Response to ${storagePath}`);
+        fs.writeFileSync(storagePath, JSON.stringify(services, null, 2));
+      }
       services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
       if (this.accessoryFilterInverse) {
@@ -398,6 +412,7 @@ export class Hap {
     };
     this.log.debug('Sending State Report');
     this.log.debug(JSON.stringify(payload, null, 2));
+    console.log('this.socket', this.socket);
     this.socket.sendJson(payload);
   }
 
@@ -405,7 +420,6 @@ export class Hap {
    * Close the HAP connection, used for testing
    */
   public async destroy() {
-    // console.log('destroy');
     if (this.startTimeout) {
       clearTimeout(this.startTimeout);
     }

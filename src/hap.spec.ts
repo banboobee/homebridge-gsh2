@@ -31,21 +31,28 @@ const config: PluginConfig = {
   debug: false,
   platform: 'google-smarthome',
   twoFactorAuthPin: '1234',
+  accessoryFilter: [
+    "West Bedroom",
+    "Wasaga",
+    "Garage Door"
+  ],
+  accessoryFilterInverse: true,
+
 };
 
 const log = new Log(console, true);
 
-const hap = new Hap(socketMock, log, '031-45-154', config);
+const hap = new Hap(socketMock, log, '031-45-154', config, {});
 
 describe('hap', () => {
-  describe.skip('process the QUERY intent', () => {
+  describe('process the QUERY intent', () => {
     test('wait for HAP to be Ready', async () => {
       while (!hap.ready) {
         // console.log('waiting for hap to be ready');
         await sleep(500);
       }
       // eslint-disable-next-line no-console
-      console.log('hap ready, testing started');
+      console.log('hap ready, testing started', hap.services);
     }, 30000);
 
     describe('QUERY message with delay to allow manual testing', () => {
@@ -69,11 +76,6 @@ describe('hap', () => {
       });
     });
 
-    afterAll(async () => {
-      // eslint-disable-next-line no-console
-      console.log('destroy');
-      await hap.destroy();
-    });
   });
 
   describe('process the SYNC intent', () => {
@@ -143,7 +145,7 @@ describe('hap', () => {
     [
       {
         ids: [
-          '53d899e23044252d020ef417d472697eaea748bb9c7b3e860cda6b8b1253ab18'
+          '11d20d713a1ea46cd7e9b524bda80eb6d5bc7df2ee813903c697edad4a700390'
         ],
         status: 'ERROR',
         errorCode: 'challengeNeeded',
@@ -199,6 +201,7 @@ describe('hap', () => {
 
   afterAll(async () => {
     // eslint-disable-next-line no-console
+    console.log('destroy');
     await hap.destroy();
   });
 });
@@ -219,7 +222,7 @@ const executeLightOff =
         'instancePort': 42909,
         'instanceUsername': '1C:22:3D:E3:CF:34',
       },
-      'id': 'c4644ccdad8201ccee9ae469f20ea3f6dc5f8338525729da5e51bbc005c00e44',
+      'id': '3844a66b29d217daeeede4f8026fb7d8492d9e3fb53650dd67b9da977ee0ca03',
     },
   ],
   'execution': [
@@ -243,7 +246,7 @@ const executeGarageOpen =
         'instancePort': 42909,
         'instanceUsername': '1C:22:3D:E3:CF:34',
       },
-      'id': '53d899e23044252d020ef417d472697eaea748bb9c7b3e860cda6b8b1253ab18',
+      'id': '11d20d713a1ea46cd7e9b524bda80eb6d5bc7df2ee813903c697edad4a700390',
     },
   ],
   'execution': [
@@ -268,7 +271,7 @@ const executeGarageDoorOpenWithIncorrectPin =
         'instancePort': 42909,
         'instanceUsername': '1C:22:3D:E3:CF:34',
       },
-      'id': '53d899e23044252d020ef417d472697eaea748bb9c7b3e860cda6b8b1253ab18',
+      'id': '11d20d713a1ea46cd7e9b524bda80eb6d5bc7df2ee813903c697edad4a700390',
     },
   ],
   'execution': [
@@ -296,7 +299,7 @@ const executeGarageDoorOpenWithCorrectPin =
         'instancePort': 42909,
         'instanceUsername': '1C:22:3D:E3:CF:34',
       },
-      'id': '53d899e23044252d020ef417d472697eaea748bb9c7b3e860cda6b8b1253ab18',
+      'id': '11d20d713a1ea46cd7e9b524bda80eb6d5bc7df2ee813903c697edad4a700390',
     },
   ],
   'execution': [
@@ -324,7 +327,7 @@ const executeGarageClose =
         'instancePort': 42909,
         'instanceUsername': '1C:22:3D:E3:CF:34',
       },
-      'id': '53d899e23044252d020ef417d472697eaea748bb9c7b3e860cda6b8b1253ab18',
+      'id': '11d20d713a1ea46cd7e9b524bda80eb6d5bc7df2ee813903c697edad4a700390',
     },
   ],
   'execution': [

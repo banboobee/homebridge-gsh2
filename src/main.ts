@@ -1,9 +1,10 @@
+import { WebSocket } from '@homebridge/ws-connect';
+import * as fs from 'fs-extra';
 import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 import * as querystring from 'node:querystring';
-import { WebSocket } from '@homebridge/ws-connect';
-import * as fs from 'fs-extra';
 
+import type { API } from 'homebridge';
 import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
@@ -13,14 +14,16 @@ export class Plugin {
   public log: Log;
   public config: PluginConfig;
   public homebridgeConfig;
+  public api: API;
   public hap: Hap;
 
   public package = fs.readJsonSync(path.resolve(__dirname, '../package.json'));
 
-  constructor(log, config: PluginConfig, homebridgeConfig) {
+  constructor(log, config: PluginConfig, homebridgeConfig, api) {
     this.log = new Log(log, config.debug);
     this.config = config;
     this.homebridgeConfig = homebridgeConfig;
+    this.api = api;
 
     const qs = {
       // generate unique id for service based on the username, sha256 for privacy
@@ -38,7 +41,7 @@ export class Plugin {
 
     const socket = new WebSocket(`${serverUrl}?${querystring.stringify(qs)}`);
 
-    this.hap = new Hap(socket, this.log, this.homebridgeConfig.bridge.pin, this.config);
+    this.hap = new Hap(socket, this.log, this.homebridgeConfig.bridge.pin, this.config, this.api);
 
     // listen for websocket status events, connect and disconnect events, errors, etc.
     socket.on('websocket-status', (status) => {

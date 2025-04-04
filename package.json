@@ -1,7 +1,7 @@
 {
   "name": "homebridge-gsh",
   "displayName": "Homebridge Google Smart Home",
-  "version": "3.1.2",
+  "version": "3.1.3",
   "description": "Google Smart Home",
   "homepage": "https://github.com/homebridge-plugins/homebridge-gsh/blob/latest/README.md",
   "license": "GPL-3.0",
@@ -39,7 +39,7 @@
     "lint": "eslint --max-warnings=0 .",
     "lint:fix": "eslint --fix --max-warnings=0 .",
     "prepublishOnly": "npm run build",
-    "test": "jest --detectOpenHandles",
+    "test": "jest --forceExit --detectOpenHandles --verbose=true ",
     "test-coverage": "jest --coverage",
     "build:gen-hap-types": "ts-node scripts/gen-hap-types.ts"
   },
@@ -50,7 +50,7 @@
     "rxjs"
   ],
   "dependencies": {
-    "@homebridge/hap-client": "^2.0.5",
+    "@homebridge/hap-client": "^2.1.0",
     "@homebridge/ws-connect": "^3.0.0",
     "chalk": "^5.3.0",
     "fs-extra": "^11.2.0",
