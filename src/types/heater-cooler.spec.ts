@@ -247,7 +247,6 @@ describe('heaterCooler', () => {
     });
   });
   afterAll(async () => {
-    console.log('destroy');
     await hap.destroy();
   });
 });

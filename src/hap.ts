@@ -1,5 +1,6 @@
 import { HapClient, ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
+import * as fs from 'fs';
 import { Subject } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
 import { Characteristic } from './hap-types';
@@ -307,10 +308,14 @@ export class Hap {
   public async loadAccessories(): Promise<ServiceType[]> {
     return this.hapClient.getAllServices().then((services) => {
       if (this.config.debug && process.uptime() < 300) {
-        const fs = require('fs');
-        const storagePath = this.api.user.storagePath() + '/homebridge-gsh-discovery.json';
-        this.log.warn(`Writing Discovery Response to ${storagePath}`);
-        fs.writeFileSync(storagePath, JSON.stringify(services, null, 2));
+        try {
+          // write the discovery response to a file for debugging
+          const storagePath = this.api.user.storagePath() + '/homebridge-gsh-discovery.json';
+          this.log.warn(`Writing Discovery Response to ${storagePath}`);
+          fs.writeFileSync(storagePath, JSON.stringify(services, null, 2));
+        } catch (e) {
+          this.log.error(`Failed to write discovery response to file: ${e.message}`);
+        }
       }
       services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
@@ -412,7 +417,6 @@ export class Hap {
     };
     this.log.debug('Sending State Report');
     this.log.debug(JSON.stringify(payload, null, 2));
-    console.log('this.socket', this.socket);
     this.socket.sendJson(payload);
   }
 

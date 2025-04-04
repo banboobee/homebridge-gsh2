@@ -32,9 +32,9 @@ const config: PluginConfig = {
   platform: 'google-smarthome',
   twoFactorAuthPin: '1234',
   accessoryFilter: [
-    "West Bedroom",
-    "Wasaga",
-    "Garage Door"
+    'West Bedroom',
+    'Wasaga',
+    'Garage Door',
   ],
   accessoryFilterInverse: true,
 
