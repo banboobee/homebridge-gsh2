@@ -45,12 +45,12 @@ export class Plugin {
 
     // listen for websocket status events, connect and disconnect events, errors, etc.
     socket.on('websocket-status', (status) => {
-      this.log.info(status);
+      this.log.info(`Cloud Server Status: ${status}`);
     });
 
     socket.on('json', async (req) => {
       if (req.serverMessage) {
-        this.log.warn(req.serverMessage);
+        this.log.warn(`Cloud Server Message: ${req.serverMessage}`);
       }
 
       if (!req.body || !req.body.inputs) {
