@@ -7,9 +7,9 @@
         <a
           target="_blank"
           rel="noopener noreferrer"
-          href="https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control"
+          href="https://github.com/oznu/homebridge-config-ui-x/wiki/Enabling-Accessory-Control"
         >
-          https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control
+          https://github.com/oznu/homebridge-config-ui-x/wiki/Enabling-Accessory-Control
         </a>
         <span>{{ 'accessories.message_for_more_information' | translate }}</span>
       </p>
@@ -26,71 +26,10 @@
     </div>
 
     <div class="text-center mt-1" *ngIf="pluginConfig.token">
+      <i class="fas fa-check-circle primary-text" style="font-size: 50px"></i>
       <h4 class="mt-2">
-        <img *ngIf="linkType === 'google'" src="assets/google-logo.svg" alt="Google Logo" style="height: 40px;" />
-        <img *ngIf="linkType === 'github'" src="assets/github-mark.svg" alt="GitHub Logo" style="height: 40px;" />
         {{ linkType | titlecase }} {{ 'plugins.settings.custom.homebridge-gsh.label_account_linked' | translate }}
       </h4>
-        <p class="text-muted small"><b>User ID: </b>{{ user_id }}</p>
-     
-
-      <div *ngIf="userData" class="mt-3"> 
-        <div *ngFor="let plan of userData.paypalPlans; let i = index" class="paypal-plan-container">
-          <div class="card shadow-sm">
-            <div class="card-body d-flex align-items-center justify-content-between">
-              <div class="paypal-text">
-                <h5 class="card-title">{{ plan.name }}</h5>
-                <p class="card-text text-muted">{{ plan.description }}</p>
-              </div>
-              <div [id]="'paypal-button-container-' + i" class="paypal-button"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <ngb-accordion class="mt-3" #acc="ngbAccordion">
-        <ngb-panel id="subscriptionPanel" title="Subscription Details">
-          <ng-template ngbPanelContent>
-            <div *ngIf="showConfirmModal" class="confirm-overlay">
-              <div class="confirm-dialog">
-                <p>Are you sure you want to cancel your subscription?</p>
-                <div class="text-end">
-                  <button class="btn btn-secondary me-2" (click)="showConfirmModal = false">No</button>
-                  <button class="btn btn-danger" (click)="confirmCancel()">Yes, Cancel</button>
-                </div>
-              </div>
-            </div>
-      
-            <div class="d-flex justify-content-between align-items-start flex-wrap w-100">
-              <table class="table table-borderless table-sm mb-0" style="width: auto;">
-                <tbody>
-                  <tr>
-                    <th class="text-muted small pe-3 text-nowrap"><strong>User ID:</strong></th>
-                    <td class="text-muted small">{{ user_id }}</td>
-                  </tr>
-                  <tr>
-                    <th class="text-muted small pe-3 text-nowrap"><strong>Plan:</strong></th>
-                    <td class="text-muted small">{{ userData.paypalPlanID }}</td>
-                  </tr>
-                  <tr>
-                    <th class="text-muted small pe-3 text-nowrap"><strong>Subscription ID:</strong></th>
-                    <td class="text-muted small">{{ userData.paypalSubscriptionID }}</td>
-                  </tr>
-                </tbody>
-              </table>
-      
-              <div class="mt-3">
-                <button class="btn btn-danger btn-sm" (click)="cancelSubscription()">
-                  Cancel Subscription
-                </button>
-              </div>
-            </div>
-          </ng-template>
-        </ngb-panel>
-      </ngb-accordion>
-      
-      
-    
 
       <div class="mt-3" *ngIf="justLinked">
         <p class="primary-text">

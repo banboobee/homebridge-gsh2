@@ -74,14 +74,14 @@
         "title": "Force Degrees Fahrenheit",
         "type": "boolean"
       },
-      "showHeaterCoolerAsACUnit": {
-        "title": "Force Heater-Cooler devices to show as AC_UNIT",
-        "type": "boolean"
-      },
       "betaServer": {
         "title": "Use beta cloud server",
         "type": "boolean",
         "default": false
+      },
+      "showHeaterCoolerAsACUnit": {
+        "title": "Force Heater-Cooler devices to show as AC_UNIT",
+        "type": "boolean"
       }
     }
   },
@@ -199,14 +199,14 @@
         "forceFahrenheit",
         {
           "type": "help",
-          "helpvalue": "<h5><B>Force Heater-Cooler devices to show as AC_UNIT</b></h5><em class='primary-text'>This makes heater cooler advertise as an air conditioning unit.</em>"
+          "helpvalue": "<h5><B>Beta Cloud</b></h5><em class='primary-text'>Used for cloud server testing only.  Change plugin cloud endpoint to beta test server.</em>"
         },
-        "showHeaterCoolerAsACUnit",
+        "betaServer",
         {
           "type": "help",
-          "helpvalue": "<h5><B>Beta Testing Cloud Server</b></h5><em class='primary-text'>Used for cloud server testing only.  Change plugin cloud endpoint to beta test server.</em>"
+          "helpvalue": "<h5><B>Force Heater-Cooler devices to show as AC_UNIT</b></h5><em class='primary-text'>This makes heater cooler advertise as an air conditioning unit.</em>"
         },
-        "betaServer"
+        "showHeaterCoolerAsACUnit"
       ]
     }
   ]
