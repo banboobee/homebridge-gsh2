@@ -25,7 +25,7 @@
         },
         {
             "name": "Google Smart Home",
-            "token": "fdfdsfdfdfd",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Imdvb2dsZS1vYXV0aDJ8MTA5NTc0MTIyNTIwNTY4MjEyMzgyIiwiaWF0IjoxNzMxMTc0ODM2fQ.uoL_DYBt7HolMMnyq_dQUYLDNSmb0S99tnDGlffSyEs",
             "notice": "Keep your token a secret!",
             "debug": true,
             "accessoryFilter": [
@@ -33,7 +33,7 @@
                 "Wasaga"
             ],
             "accessoryFilterInverse": true,
-            "betaServer": false,
+            "betaServer": true,
             "platform": "google-smarthome"
         }
     ],

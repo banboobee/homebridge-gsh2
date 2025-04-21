@@ -10,6 +10,8 @@ import { PluginConfig } from './interfaces';
 import { Log } from './logger';
 import { SERVER_ADDRESS } from './settings';
 
+import * as WebSocketClient from 'ws';
+
 export class Plugin {
   public log: Log;
   public config: PluginConfig;
@@ -18,6 +20,8 @@ export class Plugin {
   public hap: Hap;
 
   public package = fs.readJsonSync(path.resolve(__dirname, '../package.json'));
+
+
 
   constructor(log, config: PluginConfig, homebridgeConfig, api) {
     this.log = new Log(log, config.debug);
@@ -33,13 +37,19 @@ export class Plugin {
       n: this.package.name,
     };
 
+    const options: WebSocketClient.ClientOptions = {
+      headers: {
+        'user-agent': `${this.package.name}: ${this.package.version}`
+      }
+    };
+
     const serverUrl = this.config.betaServer ? `wss://${SERVER_ADDRESS.beta}/socket` : `wss://${SERVER_ADDRESS.prod}/socket`;
 
     if (this.config.betaServer) {
       this.log.warn(`Using beta server ${serverUrl}`);
     }
 
-    const socket = new WebSocket(`${serverUrl}?${querystring.stringify(qs)}`);
+    const socket = new WebSocket(`${serverUrl}?${querystring.stringify(qs)}`, { options: options });
 
     this.hap = new Hap(socket, this.log, this.homebridgeConfig.bridge.pin, this.config, this.api);
 

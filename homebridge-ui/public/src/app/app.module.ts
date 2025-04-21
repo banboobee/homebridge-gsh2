@@ -1,10 +1,11 @@
-import { NgModule } from '@angular/core'
-import { BrowserModule } from '@angular/platform-browser'
+import { HttpClientModule } from '@angular/common/http';
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
+import { AppComponent } from './app.component';
 
-import { AppComponent } from './app.component'
-
-import { TranslatePipe } from './translate.pipe'
-import '@homebridge/plugin-ui-utils/dist/ui.interface'
+import '@homebridge/plugin-ui-utils/dist/ui.interface';
+import { TranslatePipe } from './translate.pipe';
 
 @NgModule({
   declarations: [
@@ -13,6 +14,8 @@ import '@homebridge/plugin-ui-utils/dist/ui.interface'
   ],
   imports: [
     BrowserModule,
+    HttpClientModule,
+    NgbAccordionModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
