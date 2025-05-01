@@ -21,7 +21,7 @@
 [![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 [![Donate](https://img.shields.io/badge/donate-paypal-yellowgreen.svg)](https://paypal.me/oznu) -->
 
-Control your supported [Homebridge](https://github.com/nfarina/homebridge) accessories from any Google Home speaker or the Google Home mobile app. Inspired by [homebridge-alexa](https://github.com/NorthernMan54/homebridge-alexa).
+Control your supported [Homebridge](https://github.com/homebridge/homebridge) accessories from any Google Home speaker or the Google Home mobile app. Inspired by [homebridge-alexa](https://github.com/NorthernMan54/homebridge-alexa).
 
 - [Supported Device Types](#supported-device-types)
 - [Installation Instructions](#installation-instructions)
@@ -59,7 +59,7 @@ _Note: Google Smart Home does not currently support all "sensor" devices such as
 
 #### Option 1: Install via Homebridge Config UI X:
 
-Search for "Google Home" in [homebridge-config-ui-x](https://github.com/oznu/homebridge-config-ui-x) and install `homebridge-gsh`.
+Search for "Google Home" in [homebridge-config-ui-x](https://github.com/homebridge/homebridge-config-ui-x) and install `homebridge-gsh`.
 
 #### Option 2: Manually Install:
 
@@ -69,27 +69,27 @@ sudo npm install -g homebridge-gsh
 
 ## Configuration
 
-To configure `homebridge-gsh` you must also be running [homebridge-config-ui-x](https://github.com/oznu/homebridge-config-ui-x).
+To configure `homebridge-gsh` you must also be running [homebridge-config-ui-x](https://github.com/homebridge/homebridge-config-ui-x).
 
-1. Navigate to the Plugins page in [homebridge-config-ui-x](https://github.com/oznu/homebridge-config-ui-x).
+1. Navigate to the Plugins page in [homebridge-config-ui-x](https://github.com/homebridge/homebridge-config-ui-x).
 2. Click the **Settings** button for the Google Smart Home plugin.
 3. Click the **Link Account** button.
 4. Sign in with your Google or GitHub account.
 5. Your account is now linked.
 6. Restart Homebridge for the changes to take effect.
-7. Add the [Homebridge Action](https://assistant.google.com/services/a/uid/000000b558f0d5d1?hl=en) using the Google Home mobile app. [See Wiki](https://github.com/oznu/homebridge-gsh/wiki#add-homebridge-to-google-home-app) for detailed instructions.
+7. Add the [Homebridge Action](https://assistant.google.com/services/a/uid/000000b558f0d5d1?hl=en) using the Google Home mobile app. [See Wiki](https://github.com/homebridge/homebridge-gsh/wiki#add-homebridge-to-google-home-app) for detailed instructions.
 
 ![homebridge-gsh-signup](https://user-images.githubusercontent.com/3979615/62948031-ff228d80-be26-11e9-9e07-ef1023f28fa8.gif)
 
 ### Enabling Accessory Control
 
-Homebridge must be running in insecure mode to allow accessory control via this plugin. See [Enabling Accessory Control](https://github.com/oznu/homebridge-config-ui-x/wiki/Enabling-Accessory-Control) for instructions.
+Homebridge must be running in insecure mode to allow accessory control via this plugin. See [Enabling Accessory Control](https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control) for instructions.
 
 ### Multiple Homebridge Instances
 
 This plugin **must** only be configured on one Homebridge instance on your network as the plugin will discover all your other Homebridge instances and be able to control them. For this to work:
 
-- all instances must be running [in insecure mode](https://github.com/oznu/homebridge-config-ui-x/wiki/Enabling-Accessory-Control)
+- all instances must be running [in insecure mode](https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control)
 - all instances must have the same PIN defined in the `config.json`
 
 ## Known Issues
@@ -112,7 +112,7 @@ sudo npm install -g homebridge-gsh
 
 #### 2. Cannot control accessories
 
-See [Enabling Accessory Control](https://github.com/oznu/homebridge-config-ui-x/wiki/Enabling-Accessory-Control) and [Multiple Homebridge Instances](#multiple-homebridge-instances).
+See [Enabling Accessory Control](https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control) and [Multiple Homebridge Instances](#multiple-homebridge-instances).
 
 #### 3. Ask on Discord
 

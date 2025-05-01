@@ -22,6 +22,7 @@
     "@homebridge/plugin-ui-utils": "1.0.3",
     "@typescript-eslint/types": "^8.11.0",
     "@typescript-eslint/utils": "^8.11.0",
+    "marked": "^15.0.11",
     "rxjs": "~7.8.1",
     "tslib": "^2.8.0",
     "zone.js": "~0.13.0"

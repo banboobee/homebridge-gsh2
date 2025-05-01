@@ -84,14 +84,15 @@
   },
   "nodemonConfig": {
     "watch": [
-      "src"
+      "src",
+      "homebridge-ui/public/src"
     ],
-    "ext": "ts",
+    "ext": "ts,html,scss,md",
     "ignore": [
       "**/*.spec.ts",
       "**/*.test.ts"
     ],
-    "exec": "tsc && DEBUG= homebridge -U ./test/hbConfig -T -D -I -P ./",
+    "exec": "rimraf dist && npm run build:ui & tsc & wait && DEBUG= homebridge -U ./test/hbConfig -T -D -I -P ./",
     "signal": "SIGTERM",
     "env": {
       "NODE_OPTIONS": "--trace-warnings"
