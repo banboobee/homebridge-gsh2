@@ -25,6 +25,7 @@
         },
         {
             "name": "Google Smart Home",
+            "token": "",
             "notice": "Keep your token a secret!",
             "debug": true,
             "accessoryFilter": [
