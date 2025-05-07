@@ -26,6 +26,6 @@ Follow these steps inside the Google Home app:
 6. Sign in using the same account you linked above.
 7. Your accessories will sync automatically.
 
-> 📖 <a href="https://github.com/homebridge-plugins/homebridge-gsh/wiki#add-homebridge-to-google-home-app" target="_blank" rel="noopener noreferrer">See the Wiki for more detailed instructions</a>
+> 📖 <a href="https://github.com/homebridge-plugins/homebridge-gsh/wiki#installation" target="_blank" rel="noopener noreferrer">See the Wiki for more detailed instructions</a>
 
 ---

@@ -16,7 +16,7 @@
             "name": "Config",
             "port": 8581,
             "auth": "none",
-            "theme": "auto",
+            "theme": "orange",
             "tempUnits": "c",
             "lang": "auto",
             "sudo": false,
@@ -25,7 +25,6 @@
         },
         {
             "name": "Google Smart Home",
-            "token": "fdfdsfdfdfd",
             "notice": "Keep your token a secret!",
             "debug": true,
             "accessoryFilter": [

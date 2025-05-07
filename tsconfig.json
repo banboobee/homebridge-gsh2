@@ -17,5 +17,6 @@
     "homebridge-ui",
     "node_modules",
     "./dist",
+    "./test"
   ]
-}   
+}
