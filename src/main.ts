@@ -39,8 +39,8 @@ export class Plugin {
 
     const options: WebSocketClient.ClientOptions = {
       headers: {
-        'user-agent': `${this.package.name}: ${this.package.version}`
-      }
+        'user-agent': `${this.package.name}: ${this.package.version}`,
+      },
     };
 
     const serverUrl = this.config.betaServer ? `wss://${SERVER_ADDRESS.beta}/socket` : `wss://${SERVER_ADDRESS.prod}/socket`;

@@ -48,7 +48,7 @@ beforeAll(async () => {
     '--disable-blink-features=AutomationControlled',
     '--disable-infobars',
     //  '--start-maximized',
-    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
   );
 
   options.excludeSwitches('enable-automation');
@@ -76,25 +76,27 @@ async function openPluginConfig(driver: WebDriver) {
       await closeBtn.click();
       await driver.wait(until.stalenessOf(closeBtn), 3000);
     }
-  } catch (_) { }
+  } catch (e) {
+    console.error('Error closing modal:', e);
+  }
 
   const dropdownToggle = await driver.wait(
     until.elementLocated(By.css('a[ngbdropdowntoggle].dropdown-toggle')),
-    5000
+    5000,
   );
   await driver.wait(until.elementIsVisible(dropdownToggle), 5000);
   await dropdownToggle.click();
 
   const pluginConfigButton = await driver.wait(
-    until.elementLocated(By.xpath("//button[contains(@class, 'dropdown-item') and contains(normalize-space(), 'Plugin Config')]")),
-    5000
+    until.elementLocated(By.xpath('//button[contains(@class, \'dropdown-item\') and contains(normalize-space(), \'Plugin Config\')]')),
+    5000,
   );
   await driver.wait(until.elementIsVisible(pluginConfigButton), 5000);
   await pluginConfigButton.click();
 
   const modalTitle = await driver.wait(
     until.elementLocated(By.css('.modal-title')),
-    5000
+    5000,
   );
   const text = await modalTitle.getText();
   expect(text).toBe('Homebridge Google Smart Home');
@@ -103,8 +105,8 @@ async function openPluginConfig(driver: WebDriver) {
 describe('Plugin Config', () => {
   test('Ready for Testing', () => {
     if (process.env.PAYPAL_PER_USERNAME === undefined || process.env.PAYPAL_PER_PASSWORD === undefined) {
-      let cancelCreateTests = true;
-      let cancelCancelTests = true;
+      const cancelCreateTests = true;
+      const cancelCancelTests = true;
     }
     expect(process.env.PAYPAL_PER_USERNAME).toBeDefined();
     expect(process.env.PAYPAL_PER_PASSWORD).toBeDefined();
@@ -150,7 +152,7 @@ describe('Plugin Config', () => {
           const iframe = await driver.findElement(By.css('.modal-body iframe'));
           await driver.switchTo().frame(iframe);
 
-          const linkBtn = await driver.findElement(By.xpath("//button[contains(text(), 'Link Account')]"));
+          const linkBtn = await driver.findElement(By.xpath('//button[contains(text(), \'Link Account\')]'));
           await linkBtn.click();
 
           await driver.wait(async () => {
@@ -191,7 +193,7 @@ describe('Plugin Config', () => {
           await safeSwitchToWindow(popupWindow);
           console.log('1 Current URL:', await driver.getCurrentUrl());
           const googleBtn = await driver.wait(
-            until.elementLocated(By.css('button[data-provider="google-oauth2"]'))
+            until.elementLocated(By.css('button[data-provider="google-oauth2"]')),
           );
           await driver.wait(until.elementIsVisible(googleBtn));
           console.log('2 Current URL:', await driver.getCurrentUrl());
@@ -211,7 +213,7 @@ describe('Plugin Config', () => {
           await safeSwitchToWindow(popupWindow);
 
           const confirmButton = await driver.wait(
-            until.elementLocated(By.xpath("//button[contains(text(), 'Confirm')]"))
+            until.elementLocated(By.xpath('//button[contains(text(), \'Confirm\')]')),
           );
           console.log('a Current URL:', await driver.getCurrentUrl());
           await driver.wait(until.elementIsVisible(confirmButton));
@@ -260,8 +262,8 @@ describe('Plugin Config', () => {
       await driver.switchTo().frame(iframe);
 
       const statusElement = await driver.wait(
-        until.elementLocated(By.xpath("//p[contains(., 'Account Status:')]")),
-        5000
+        until.elementLocated(By.xpath('//p[contains(., \'Account Status:\')]')),
+        5000,
       );
       const statusText = await statusElement.getText();
       console.log('265: Account status text:', statusText);
@@ -280,8 +282,8 @@ describe('Plugin Config', () => {
 
       // Click the legend
       const legend = await driver.wait(
-        until.elementLocated(By.xpath("//legend[contains(normalize-space(), 'Create Subscription')]")),
-        5000
+        until.elementLocated(By.xpath('//legend[contains(normalize-space(), \'Create Subscription\')]')),
+        5000,
       );
       expect(legend).toBeDefined();
       await legend.click();
@@ -299,13 +301,13 @@ describe('Plugin Config', () => {
       // console.log(html);
       const paypalIframe = await driver.wait(
         until.elementLocated(By.css('#paypal-button-container-0 iframe.component-frame')),
-        10000 // wait up to 10s
+        10000, // wait up to 10s
       );
       await driver.switchTo().frame(paypalIframe);
 
       const paypalButton = await driver.wait(
         until.elementLocated(By.css('div.paypal-button[data-funding-source="paypal"]')),
-        10000
+        10000,
       );
 
       expect(paypalButton).toBeDefined();
@@ -326,21 +328,31 @@ describe('Plugin Config', () => {
       await driver.switchTo().window(popupHandle);
       await driver.wait(until.titleIs('Log in to your PayPal account'));
       expect(await driver.getTitle()).toContain('Log in to your PayPal account');
-      if (trace) console.log('314: ', await driver.getTitle());
+      if (trace) {
+        console.log('314: ', await driver.getTitle());
+      }
       //    expect(await driver.findElement(By.css("body")).getText()).toContain('Subscription Options');
-      if (trace) console.log('316: ', await driver.findElement(By.css("body")).getText());
+      if (trace) {
+        console.log('316: ', await driver.findElement(By.css('body')).getText());
+      }
 
       // expect(await driver.findElement(By.css("body")).getText()).toContain('Pay with PayPal');
 
       const emailInput = await driver.findElement(By.id('email'));
       await emailInput.clear();
       await emailInput.sendKeys(process.env.PAYPAL_PER_USERNAME);
-      if (trace) console.log('323: ', await driver.findElement(By.css("body")).getText());
+      if (trace) {
+        console.log('323: ', await driver.findElement(By.css('body')).getText());
+      }
       //await driver.findElement(By.id('btnNext')).click();
 
       //      sleep(1000);
-      if (trace) console.log('327: ', await driver.getTitle());
-      if (trace) console.log('328: ', await driver.findElement(By.css("body")).getText());
+      if (trace) {
+        console.log('327: ', await driver.getTitle());
+      }
+      if (trace) {
+        console.log('328: ', await driver.findElement(By.css('body')).getText());
+      }
       //await driver.wait(until.titleIs('Log in to your PayPal account'));
       //expect(await driver.findElement(By.css("body")).getText()).toContain('Pay with PayPal');
 
@@ -353,41 +365,63 @@ describe('Plugin Config', () => {
 
       expect(await driver.getTitle()).toContain('PayPal Checkout - Choose a way to pay');
 
-      if (trace) console.log('341: ', await driver.getTitle());
-      if (trace) console.log('342: ', await driver.findElement(By.css("body")).getText());
+      if (trace) {
+        console.log('341: ', await driver.getTitle());
+      }
+      if (trace) {
+        console.log('342: ', await driver.findElement(By.css('body')).getText());
+      }
 
       //  expect(await driver.findElement(By.css("body")).getText()).toContain('Subscription Options');
-      await driver.findElement(By.xpath("//button[contains(@ng-click, 'continue()')]")).click();
+      await driver.findElement(By.xpath('//button[contains(@ng-click, \'continue()\')]')).click();
 
       await driver.wait(until.titleIs('PayPal Checkout - Review your payment'));
       expect(await driver.getTitle()).toContain('PayPal Checkout - Review your payment');
       //      sleep(1000);
-      if (trace) console.log('334', await driver.getTitle());
-      if (trace) console.log('335', await driver.findElement(By.css("body")).getText());
+      if (trace) {
+        console.log('334', await driver.getTitle());
+      }
+      if (trace) {
+        console.log('335', await driver.findElement(By.css('body')).getText());
+      }
 
       //  expect(await driver.findElement(By.css("body")).getText()).toContain('Subscription Options');
       if ((await driver.getTitle()) === 'PayPal Checkout - Choose a way to pay') {
-        if (trace) console.log('339 - Clicking continue', await driver.getTitle());
-        await driver.findElement(By.xpath("//button[contains(@ng-click, 'continue()')]")).click();
+        if (trace) {
+          console.log('339 - Clicking continue', await driver.getTitle());
+        }
+        await driver.findElement(By.xpath('//button[contains(@ng-click, \'continue()\')]')).click();
       }
 
       // await driver.wait(until.titleIs('PayPal Checkout - Review your payment'));
       //      sleep(1000);
-      if (trace) console.log('344', await driver.getTitle());
+      if (trace) {
+        console.log('344', await driver.getTitle());
+      }
       const confirmButton = await driver.wait(
         until.elementLocated(By.id('confirmButtonTop')),
-        5000
+        5000,
       );
-      if (trace) console.log('345', await driver.findElement(By.css("body")).getText());
+      if (trace) {
+        console.log('345', await driver.findElement(By.css('body')).getText());
+      }
       expect(confirmButton).toBeDefined();
       await driver.findElement(By.id('confirmButtonTop')).click();
-      if (trace) console.log('348', await driver.getTitle());
+      if (trace) {
+        console.log('348', await driver.getTitle());
+      }
       await driver.wait(until.titleIs('PayPal Checkout - Review your payment'));
-      if (trace) console.log('350', await driver.getTitle());
+      if (trace) {
+        console.log('350', await driver.getTitle());
+      }
       expect(await driver.getTitle()).toContain('PayPal Checkout - Review your payment');
       // sleep(1000);
-      if (trace) console.log('358', await driver.getTitle());
-      if (trace) console.log('359', await driver.findElement(By.css("body")).getText());
+      if (trace) {
+        console.log('358', await driver.getTitle());
+      }
+      if (trace) {
+        console.log('359', await driver.findElement(By.css('body')).getText());
+      }
 
       await driver.wait(async () => {
         const handles = await driver.getAllWindowHandles();
@@ -395,7 +429,9 @@ describe('Plugin Config', () => {
       }, 10000);
 
       await safeSwitchToWindow(originalWindow);
-      if (trace) console.log('362: ', await driver.getTitle());
+      if (trace) {
+        console.log('362: ', await driver.getTitle());
+      }
       expect(await driver.getTitle()).toContain('HB GSH Test');
       // await driver.wait(until.elementLocated(By.id('notification')));
       // Click the legend
@@ -403,10 +439,12 @@ describe('Plugin Config', () => {
       // const html = await driver.getPageSource();
       // console.log(html);
       await driver.wait(
-        until.elementLocated(By.xpath("//div[contains(@class, 'toast-message') and contains(text(), 'Service Subscription Created')]")),
-        10000
+        until.elementLocated(By.xpath('//div[contains(@class, \'toast-message\') and contains(text(), \'Service Subscription Created\')]')),
+        10000,
       );
-      if (trace) console.log('388: ', await driver.getTitle());
+      if (trace) {
+        console.log('388: ', await driver.getTitle());
+      }
       // Wait for the toast notification to appear
       /*
       await driver.wait(
@@ -423,7 +461,9 @@ describe('Plugin Config', () => {
       // Assert the toast message confirms cancellation
       expect(toastText.toLowerCase()).toContain('cancelled');
       */
-      if (trace) console.log('364', await driver.getTitle());
+      if (trace) {
+        console.log('364', await driver.getTitle());
+      }
       // sleep(1000);
     }, 30000);
 
@@ -440,7 +480,9 @@ describe('Plugin Config', () => {
     });
 
     test('should show Account Status as Subscription:', async () => {
-      if (trace) console.log('407', await driver.getTitle());
+      if (trace) {
+        console.log('407', await driver.getTitle());
+      }
       expect(await driver.getTitle()).toContain('HB GSH Test');
       const iframe = await driver.findElement(By.css('.modal-body iframe'));
       await driver.switchTo().frame(iframe);
@@ -453,8 +495,8 @@ describe('Plugin Config', () => {
       }, 10000); // wait up to 10s
 
       const statusElement = await driver.wait(
-        until.elementLocated(By.xpath("//p[contains(., 'Account Status:')]")),
-        5000
+        until.elementLocated(By.xpath('//p[contains(., \'Account Status:\')]')),
+        5000,
       );
 
       // console.log('💡 Dumping page source before wait...');
@@ -486,7 +528,9 @@ describe('Plugin Config', () => {
     });
 
     test('should show Account Status as Subscription:', async () => {
-      if (trace) console.log('440', await driver.getTitle());
+      if (trace) {
+        console.log('440', await driver.getTitle());
+      }
       if (await driver.getTitle() !== 'HB GSH Test') {
         console.log('Canceling all tests due to incorrect title');
         cancelCancelTests = true;
@@ -496,8 +540,8 @@ describe('Plugin Config', () => {
       await driver.switchTo().frame(iframe);
 
       const statusElement = await driver.wait(
-        until.elementLocated(By.xpath("//p[contains(., 'Account Status:')]")),
-        5000
+        until.elementLocated(By.xpath('//p[contains(., \'Account Status:\')]')),
+        5000,
       );
       const statusText = await statusElement.getText();
       console.log('475: Account status text:', statusText);
@@ -516,8 +560,8 @@ describe('Plugin Config', () => {
 
       // Click the legend
       const legend = await driver.wait(
-        until.elementLocated(By.xpath("//legend[contains(normalize-space(), 'Subscription Details')]")),
-        5000
+        until.elementLocated(By.xpath('//legend[contains(normalize-space(), \'Subscription Details\')]')),
+        5000,
       );
       expect(legend).toBeDefined();
       await legend.click();
@@ -529,8 +573,8 @@ describe('Plugin Config', () => {
       const iframe = await driver.findElement(By.css('.modal-body iframe'));
       await driver.switchTo().frame(iframe);
       const button = await driver.wait(
-        until.elementLocated(By.xpath("//button[contains(text(), 'Cancel Subscription')]")),
-        1000
+        until.elementLocated(By.xpath('//button[contains(text(), \'Cancel Subscription\')]')),
+        1000,
       );
 
       await driver.wait(until.elementIsVisible(button), 3000);
@@ -547,8 +591,8 @@ describe('Plugin Config', () => {
 
       // Click "Yes, Cancel" in the confirm dialog
       const confirmButton = await driver.wait(
-        until.elementLocated(By.xpath("//button[contains(text(), 'Yes, Cancel')]")),
-        3000
+        until.elementLocated(By.xpath('//button[contains(text(), \'Yes, Cancel\')]')),
+        3000,
       );
 
       await driver.wait(until.elementIsVisible(confirmButton), 3000);
@@ -558,7 +602,7 @@ describe('Plugin Config', () => {
       // Wait for overlay to disappear
       await driver.wait(
         until.stalenessOf(confirmButton),
-        1000
+        1000,
       );
     });
 
@@ -574,10 +618,12 @@ describe('Plugin Config', () => {
 
       // Verify updated account status
       const toast = await driver.wait(
-        until.elementLocated(By.xpath("//div[contains(@class, 'toast-message')]")),
-        10000
+        until.elementLocated(By.xpath('//div[contains(@class, \'toast-message\')]')),
+        10000,
       );
-      if (trace) console.log('580: Toast message found', await toast.getText());
+      if (trace) {
+        console.log('580: Toast message found', await toast.getText());
+      }
       const toastText = await toast.getText();
       expect(toastText).toBe('Subscription Cancelled');
       const bodyText = await driver.findElement(By.css('body')).getText();
@@ -590,7 +636,9 @@ describe('Plugin Config', () => {
       const handles = await driver.getAllWindowHandles();
 
       // Optional debug
-      if (trace) console.log('590: Remaining window handles:', handles);
+      if (trace) {
+        console.log('590: Remaining window handles:', handles);
+      }
 
       // Expect only the main window to remain
       expect(handles.length).toBe(1);

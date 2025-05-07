@@ -11,7 +11,8 @@
   },
   "ignorePatterns": [
     "dist",
-    "homebridge-ui"
+    "homebridge-ui",
+    "chrome-profile"
   ],
   "rules": {
     "quotes": [
