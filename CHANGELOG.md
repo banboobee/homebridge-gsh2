@@ -10,6 +10,7 @@ All notable changes to `homebridge-gsh` will be documented in this file. This pr
 - Added more documentation for new users of the service
 - Migrated cloud server address from older DNS entry to newer DNS entry
 - Added new feature to debug mode, logging of the discovered homebridge services to `homebridge-gsh-discovery.json`.  To assist in debugging of issues
+- Add activeThermostatMode to thermostat query response #17, tks @rukuh
 
 ### Fixes
 
