@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import fs from 'fs';
 import path from 'path';
 import { Builder, By, until, WebDriver } from 'selenium-webdriver';
@@ -120,7 +122,8 @@ describe('Plugin Config', () => {
 
       const body = await driver.findElement(By.css('body'));
       const text = await body.getText();
-      expect(text).toContain('The Homebridge Google Smart Home plugin allows you to control your Homebridge accessories from a Google Home enabled smart speaker or the Google Home mobile app');
+      expect(text).toContain('The Homebridge Google Smart Home plugin allows you to control your Homebridge accessories from a Google Home enabled \
+      smart speaker or the Google Home mobile app');
 
       await driver.switchTo().defaultContent();
     });
