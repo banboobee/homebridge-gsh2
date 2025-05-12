@@ -2,6 +2,20 @@
 
 All notable changes to `homebridge-gsh` will be documented in this file. This project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## v4.0.0 (2025-05-12)
+
+### Changes
+
+- Refreshed plugin config screen to include User ID and updated link account images
+- Added more documentation for new users of the service
+- Migrated cloud server address from older DNS entry to newer DNS entry
+- Added new feature to debug mode, logging of the discovered homebridge services to `homebridge-gsh-discovery.json`.  To assist in debugging of issues
+- Add activeThermostatMode to thermostat query response #17, tks @rukuh
+
+### Fixes
+
+- Fix for Thermostat changing modes - Error executing command #12
+
 ## v3.1.2 (2025-02-18)
 
 ### Changes

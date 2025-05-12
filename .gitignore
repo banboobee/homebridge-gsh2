@@ -9,3 +9,7 @@ test/hbConfig/.uix-secrets
 /test/hbConfig/persist
 /test/hbConfig/accessories
 test/hbConfig/config.json
+test/hbConfig/homebridge-gsh-discovery.json
+test/hbConfig/auth.json
+test/testPasswords
+/chrome-profile

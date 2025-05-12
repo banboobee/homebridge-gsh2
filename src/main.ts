@@ -1,26 +1,33 @@
+import { WebSocket } from '@homebridge/ws-connect';
+import * as fs from 'fs-extra';
 import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 import * as querystring from 'node:querystring';
-import { WebSocket } from '@homebridge/ws-connect';
-import * as fs from 'fs-extra';
 
+import type { API } from 'homebridge';
 import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
 import { SERVER_ADDRESS } from './settings';
 
+import * as WebSocketClient from 'ws';
+
 export class Plugin {
   public log: Log;
   public config: PluginConfig;
   public homebridgeConfig;
+  public api: API;
   public hap: Hap;
 
   public package = fs.readJsonSync(path.resolve(__dirname, '../package.json'));
 
-  constructor(log, config: PluginConfig, homebridgeConfig) {
+
+
+  constructor(log, config: PluginConfig, homebridgeConfig, api) {
     this.log = new Log(log, config.debug);
     this.config = config;
     this.homebridgeConfig = homebridgeConfig;
+    this.api = api;
 
     const qs = {
       // generate unique id for service based on the username, sha256 for privacy
@@ -30,24 +37,30 @@ export class Plugin {
       n: this.package.name,
     };
 
+    const options: WebSocketClient.ClientOptions = {
+      headers: {
+        'user-agent': `${this.package.name}: ${this.package.version}`,
+      },
+    };
+
     const serverUrl = this.config.betaServer ? `wss://${SERVER_ADDRESS.beta}/socket` : `wss://${SERVER_ADDRESS.prod}/socket`;
 
     if (this.config.betaServer) {
       this.log.warn(`Using beta server ${serverUrl}`);
     }
 
-    const socket = new WebSocket(`${serverUrl}?${querystring.stringify(qs)}`);
+    const socket = new WebSocket(`${serverUrl}?${querystring.stringify(qs)}`, { options: options });
 
-    this.hap = new Hap(socket, this.log, this.homebridgeConfig.bridge.pin, this.config);
+    this.hap = new Hap(socket, this.log, this.homebridgeConfig.bridge.pin, this.config, this.api);
 
     // listen for websocket status events, connect and disconnect events, errors, etc.
     socket.on('websocket-status', (status) => {
-      this.log.info(status);
+      this.log.info(`Cloud Server Status: ${status}`);
     });
 
     socket.on('json', async (req) => {
       if (req.serverMessage) {
-        this.log.warn(req.serverMessage);
+        this.log.warn(`Cloud Server Message: ${req.serverMessage}`);
       }
 
       if (!req.body || !req.body.inputs) {

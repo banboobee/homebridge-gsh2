@@ -2,9 +2,9 @@
  * This is used to run the plugin during development
  */
 
+import * as fs from 'fs-extra';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import * as fs from 'fs-extra';
 
 import { Plugin } from './main';
 
@@ -45,4 +45,5 @@ class Log {
   }
 }
 
-new Plugin(new Log('Google Smart Home'), pluginConfig, homebridgeConfig);
+const api = {}; // Initialize the 'api' variable with an empty object.
+new Plugin(new Log('Google Smart Home'), pluginConfig, homebridgeConfig, api);

@@ -12,6 +12,8 @@ export const PLUGIN_NAME = 'homebridge-gsh';
  * This is the base ADDRESS for the cloud service
  */
 export const SERVER_ADDRESS = {
-  prod: 'homebridge-gsh.iot.oz.nu',
+  prod: 'gsh.homebridge.ca',
   beta: 'clone-gsh.homebridge.ca',
 };
+
+export const GITHUB_REPO: string = 'https://github.com/homebridge-plugins/homebridge-gsh/';
