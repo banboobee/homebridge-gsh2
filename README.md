@@ -55,6 +55,12 @@ Control your supported [Homebridge](https://github.com/homebridge/homebridge) ac
 
 _Note: Google Smart Home does not currently support all "sensor" devices such as Motion Sensors or Occupancy Sensors etc._
 
+## Subscription Required
+
+As of May 2025, homebridge-gsh requires a subscription to operate. This change supports the maintenance of the secure cloud infrastructure that enables integration with Google Smart Home. New users will receive a 7-day free trial. Existing users will be gradually enrolled starting in mid June 2025.
+
+For more details on pricing, enrollment, and frequently asked questions, please visit the [Subscription Service wiki page](https://github.com/homebridge-plugins/homebridge-gsh/wiki/Subscription-Service).
+
 ## Installation Instructions
 
 #### Option 1: Install via Homebridge Config UI X:
