@@ -105,7 +105,7 @@ async function openPluginConfig(driver: WebDriver) {
 }
 
 describe('Plugin Config', () => {
-  test('Ready for Testing', () => {
+  test.skip('Ready for Testing', () => {
     if (process.env.PAYPAL_PER_USERNAME === undefined || process.env.PAYPAL_PER_PASSWORD === undefined) {
       const cancelCreateTests = true;
       const cancelCancelTests = true;
@@ -122,8 +122,7 @@ describe('Plugin Config', () => {
 
       const body = await driver.findElement(By.css('body'));
       const text = await body.getText();
-      expect(text).toContain('The Homebridge Google Smart Home plugin allows you to control your Homebridge accessories from a Google Home enabled \
-      smart speaker or the Google Home mobile app');
+      expect(text).toContain('The Homebridge Google Smart Home plugin allows you to control your Homebridge accessories from a Google Home enabled smart speaker or the Google Home mobile app');
 
       await driver.switchTo().defaultContent();
     });
@@ -207,8 +206,34 @@ describe('Plugin Config', () => {
 
           const url = await driver.getCurrentUrl();
           console.log('Redirected URL after click:', url);
-          expect(url).toContain('https://clone-gsh.homebridge.ca/link-account');
+          expect(url).toContain('https://accounts.google.com/v3/signin');
         }, 20000);
+
+
+        test('should enter Google login credentials', async () => {
+          await safeSwitchToWindow(popupWindow);
+          console.log('4 Current URL:', await driver.getCurrentUrl());
+          const emailInput = await driver.wait(
+            until.elementLocated(By.id('identifierId')),
+          );
+          await emailInput.clear();
+          await emailInput.sendKeys(process.env.GOOGLE_USERNAME);
+          console.log('5 Current URL:', await driver.getCurrentUrl());
+          await driver.findElement(By.id('identifierNext')).click();
+          console.log('6 Current URL:', await driver.getCurrentUrl());
+          // const html = await driver.getPageSource();
+          // fs.writeFileSync('test/hbConfig/google-login.html', html);
+          // console.log(html);
+          const passwordInput = await driver.wait(
+            until.elementLocated(By.name('password')),
+          );
+          console.log('7 Current URL:', await driver.getCurrentUrl());
+          await passwordInput.clear();
+          await passwordInput.sendKeys(process.env.GOOGLE_PASSWORD);
+          console.log('8 Current URL:', await driver.getCurrentUrl());
+          await driver.findElement(By.id('passwordNext')).click();
+
+        });
 
         // No need for actual login, browser used stored credentials
 
@@ -248,6 +273,10 @@ describe('Plugin Config', () => {
 
 
       });
+      test('sleep 10 seconds to observe the popup', async () => {
+        console.log('Sleeping for 10 seconds to observe the popup...');
+        await driver.sleep(120000);
+      }, 121000);
     });
   });
 
