@@ -39,7 +39,7 @@ export class Plugin {
 
     const options: WebSocketClient.ClientOptions = {
       headers: {
-        'user-agent': `${this.package.name}: ${this.package.version}`,
+        'user-agent': `${this.package.name}: ${this.package.version}`
       },
     };
 
@@ -47,6 +47,7 @@ export class Plugin {
 
     if (this.config.betaServer) {
       this.log.warn(`Using beta server ${serverUrl}`);
+      options.rejectUnauthorized = false;
     }
 
     const socket = new WebSocket(`${serverUrl}?${querystring.stringify(qs)}`, { options: options });

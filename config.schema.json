@@ -82,6 +82,18 @@
         "title": "Use beta cloud server",
         "type": "boolean",
         "default": false
+      },
+      "discoveryTimeout": {
+        "type": "integer",
+        "default": 5,
+        "minimum": 5,
+        "maximum": 300
+      },
+      "discoveryWait": {
+        "type": "integer",
+        "default": 15,
+        "minimum": 15,
+        "maximum": 300
       }
     }
   },
@@ -202,6 +214,16 @@
           "helpvalue": "<h5><B>Force Heater-Cooler devices to show as AC_UNIT</b></h5><em class='primary-text'>This makes heater cooler advertise as an air conditioning unit.</em>"
         },
         "showHeaterCoolerAsACUnit",
+        {
+          "type": "help",
+          "helpvalue": "<h5><B>Delay before starting device discovery</b></h5><em class='primary-text'>Time in seconds after plugin startup to wait before starting device discovery. Default is 15 seconds</em>"
+        },
+        "discoveryWait",
+        {
+          "type": "help",
+          "helpvalue": "<h5><B>Device discovery timeout in seconds</b></h5><em class='primary-text'>Time in seconds after last homebridge instance is discovered to publish devices to Google. Default is 5 seconds</em>"
+        },
+        "discoveryTimeout",
         {
           "type": "help",
           "helpvalue": "<h5><B>Beta Testing Cloud Server</b></h5><em class='primary-text'>Used for cloud server testing only.  Change plugin cloud endpoint to beta test server.</em>"
