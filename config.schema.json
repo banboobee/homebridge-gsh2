@@ -216,12 +216,12 @@
         "showHeaterCoolerAsACUnit",
         {
           "type": "help",
-          "helpvalue": "<h5><B>Delay before starting device discovery</b></h5><em class='primary-text'>Time in seconds after plugin startup to wait before starting device discovery. Default is 15 seconds</em>"
+          "helpvalue": "<h5><B>Delay before starting Discovery</b></h5><em class='primary-text'>Time in seconds after plugin startup to wait before starting discovery. Default is 15 seconds</em>"
         },
         "discoveryWait",
         {
           "type": "help",
-          "helpvalue": "<h5><B>Device discovery timeout</b></h5><em class='primary-text'>Time in seconds after last homebridge instance is discovered to publish devices to Google. Default is 5 seconds</em>"
+          "helpvalue": "<h5><B>Discovery Timeout</b></h5><em class='primary-text'>Time in seconds after last homebridge instance is discovered to publish devices to Google. Default is 5 seconds</em>"
         },
         "discoveryTimeout",
         {
