@@ -122,6 +122,7 @@ describe('Plugin Config', () => {
 
       const body = await driver.findElement(By.css('body'));
       const text = await body.getText();
+      // eslint-disable-next-line max-len
       expect(text).toContain('The Homebridge Google Smart Home plugin allows you to control your Homebridge accessories from a Google Home enabled smart speaker or the Google Home mobile app');
 
       await driver.switchTo().defaultContent();

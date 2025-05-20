@@ -112,7 +112,8 @@ export class Hap {
     this.accessorySerialFilter = config.accessorySerialFilter || [];
     this.instanceBlacklist = config.instanceDenylist || [];
 
-    this.log.debug(`Waiting ${this.configDiscoveryWait} seconds before starting instance discovery, and ${this.configDiscoveryTimeout} seconds after last device is discovered to publish to Google...`);
+    // eslint-disable-next-line max-len
+    this.log.debug(`Waiting ${this.configDiscoveryWait} seconds before starting instance discovery, and ${this.configDiscoveryTimeout} seconds after last device is discovered to publish to Google.`);
     this.startTimeout = setTimeout(() => {
       this.discover();
     }, this.configDiscoveryWait * 1000);
