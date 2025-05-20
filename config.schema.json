@@ -221,7 +221,7 @@
         "discoveryWait",
         {
           "type": "help",
-          "helpvalue": "<h5><B>Discovery Timeout</b></h5><em class='primary-text'>Time in seconds after last homebridge instance is discovered to publish devices to Google. Default is 5 seconds</em>"
+          "helpvalue": "<h5><B>Discovery Timeout</b></h5><em class='primary-text'>Time in seconds after last Homebridge instance is discovered to publish devices to Google. Default is 5 seconds</em>"
         },
         "discoveryTimeout",
         {
