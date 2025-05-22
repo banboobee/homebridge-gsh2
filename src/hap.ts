@@ -313,7 +313,7 @@ export class Hap {
    */
   public async loadAccessories(): Promise<ServiceType[]> {
     return this.hapClient.getAllServices().then((services) => {
-      if (this.config.debug && process.uptime() < 300) {
+      if (this.config.debug && process.uptime() < 600) {
         try {
           // write the discovery response to a file for debugging
           const storagePath = this.api.user.storagePath() + '/homebridge-gsh-discovery.json';
