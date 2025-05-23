@@ -1,3 +1,9 @@
+
+This plugin uses cloud services to integrate with Google Smart Home, which requires ongoing infrastructure and support.  A subscription is required after a 7 day  trial period to keep the service running smoothly.  
+> 📖 Learn more: <a href="https://github.com/homebridge-plugins/homebridge-gsh/wiki/Subscription-Service#background" target="_blank" rel="noopener noreferrer">Subscription Service wiki page</a>
+
+---
+
 Follow the steps below to link your account and start controlling your Homebridge accessories with Google Home.
 
 ---
@@ -26,6 +32,6 @@ Follow these steps inside the Google Home app:
 6. Sign in using the same account you linked above.
 7. Your accessories will sync automatically.
 
-> 📖 <a href="https://github.com/homebridge-plugins/homebridge-gsh/wiki#installation" target="_blank" rel="noopener noreferrer">See the Wiki for more detailed instructions</a>
+> 📖 <a href="https://github.com/homebridge-plugins/homebridge-gsh/wiki#installation" target="_blank" rel="noopener noreferrer">See the Wiki for more detailed installation instructions</a>
 
 ---
