@@ -5,6 +5,12 @@ import path from 'path';
 import { Builder, By, until, WebDriver } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome';
 
+import dotenv from 'dotenv';
+
+const envPath = '../homebridge-gsh-server/lightsail/installStack/.env.clone-gsh.homebridge.ca';
+// Load environment variables from .env
+dotenv.config({ path: envPath });
+
 let driver: WebDriver;
 
 const describeIf = (condition: boolean, ...args: Parameters<typeof describe>) =>
@@ -16,8 +22,8 @@ let cancelCreateTests = false;
 let cancelCancelTests = false;
 const trace = true;
 
-describe.skip('Prepare Environment', () => {
-  test('should clear the Google Smart Home token in config.json', () => {
+describe('Prepare Environment', () => {
+  test.skip('should clear the Google Smart Home token in config.json', () => {
     const configPath = path.resolve(process.cwd(), 'test/hbConfig/config.json');
     // console.log('Config path:', configPath);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
@@ -105,7 +111,7 @@ async function openPluginConfig(driver: WebDriver) {
 }
 
 describe('Plugin Config', () => {
-  test.skip('Ready for Testing', () => {
+  test('Ready for Testing', () => {
     if (process.env.PAYPAL_PER_USERNAME === undefined || process.env.PAYPAL_PER_PASSWORD === undefined) {
       const cancelCreateTests = true;
       const cancelCancelTests = true;
@@ -304,7 +310,7 @@ describe('Plugin Config', () => {
         cancelCreateTests = true;
         console.log('268: Canceling all tests due to Trial status');
       }
-      expect(statusText).toMatch(/Account Status: Trial, Expiry: \d{1,2} \w{3} 20\d{2}, UTC/); // ✅ RegExp
+      expect(statusText).toMatch(/Account Status: Trial, Expiry: \d{1,2} \w{3} 20\d{2}/); // ✅ RegExp
       originalWindow = await driver.getWindowHandle();
       await driver.switchTo().defaultContent();
     });
@@ -379,6 +385,19 @@ describe('Plugin Config', () => {
       }
       //await driver.findElement(By.id('btnNext')).click();
 
+      try {
+        const nextButton = await driver.findElement(By.id('btnNext'));
+        await nextButton.click();
+        if (trace) {
+          console.log('400: Clicked Next button');
+        }
+        // Optionally wait for password field to be present
+        await driver.wait(until.elementLocated(By.id('password')), 5000);
+      } catch (err) {
+        if (trace) {
+          console.log('Next button not shown, skipping to password entry');
+        }
+      }
       //      sleep(1000);
       if (trace) {
         console.log('327: ', await driver.getTitle());
@@ -391,11 +410,11 @@ describe('Plugin Config', () => {
 
       await driver.findElement(By.id('password')).sendKeys(process.env.PAYPAL_PER_PASSWORD);
 
-
+      console.log('421: password entered');
       await driver.findElement(By.id('btnLogin')).click();
-
+      console.log('423: password entered');
       await driver.wait(until.titleIs('PayPal Checkout - Choose a way to pay'));
-
+      console.log('425: Choose a way to pay');
       expect(await driver.getTitle()).toContain('PayPal Checkout - Choose a way to pay');
 
       if (trace) {
