@@ -195,7 +195,7 @@ export class Hap {
    */
   async buildSyncResponse(): Promise<SmartHomeV1SyncDevices[]> {
     const devices = this.services.filter((service) =>
-      this.types?.[service.type]?.sync
+      this.types?.[service.type]?.sync,
     ).map((service) => {
       // if (!this.types[service.type]) {
       //   // this.log.debug(`Unsupported service type ${service.type}`);
@@ -401,7 +401,9 @@ export class Hap {
 
     for (const uniqueId of pendingStateReport) {
       const service = this.services.find(x => x.uniqueId === uniqueId);
-      if (!this.types?.[service.type]?.query) continue;
+      if (!this.types?.[service.type]?.query) {
+        continue;
+      }
       states[service.uniqueId] = this.types[service.type].query(service);
     }
 
@@ -416,7 +418,7 @@ export class Hap {
       return;
     }
     this.services.filter((service) => 
-      this.types?.[service.type]?.query
+      this.types?.[service.type]?.query,
     ).map((service) => {
       // if (!this.types[service.type]) {
       //   return;
