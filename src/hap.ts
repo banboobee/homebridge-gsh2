@@ -327,10 +327,21 @@ export class Hap {
       }
       services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
+      const searchList = (target:string, list:string[]): boolean => {
+	if (target) {
+	  for (const x of list) {
+	    if (target.search(x) !== -1) {
+	      this.log.debug(`${this.accessoryFilterInverse ? 'Including' : 'Skipping'} service '${target}' - matches accessorySerialFilter '${x}'`);
+	      return true;
+	    }
+	  }
+	}
+	return false;
+      }
       if (this.accessoryFilterInverse) {
-        services = services.filter(x => this.accessoryFilter.includes(x.serviceName));
+        services = services.filter(x => searchList(x.serviceName, this.accessoryFilter));
       } else {
-        services = services.filter(x => !this.accessoryFilter.includes(x.serviceName));
+        services = services.filter(x => !searchList(x.serviceName, this.accessoryFilter));
       }
       services = services.filter(x => !this.accessorySerialFilter.includes(x.accessoryInformation['Serial Number']));
       // if 2fa is forced for this service type, but a pin has not been set ignore the service
