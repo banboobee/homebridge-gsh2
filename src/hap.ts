@@ -333,7 +333,7 @@ export class Hap {
         if (target) {
           for (const regex of regexList) {
             if (regex.test(target)) {
-              this.log.debug(`${this.accessoryFilterInverse ? 'Including' : 'Skipping'} service '${target}' - matches accessorySerialFilter '${regex}'`);
+              this.log.debug(`${this.accessoryFilterInverse ? 'Including' : 'Skipping'} service '${target}' - matches accessoryFilter '${regex}'`);
               return true;
             }
           }
