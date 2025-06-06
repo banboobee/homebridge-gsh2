@@ -37,6 +37,8 @@ export class Hap {
   private discoveryTimeout: NodeJS.Timeout;
   private syncTimeout: NodeJS.Timeout;
   private api: API;
+  private configDiscoveryTimeout: number;
+  private configDiscoveryWait: number;
 
   public ready: boolean;
 
@@ -102,15 +104,19 @@ export class Hap {
     this.pin = pin;
     this.api = api;
 
+    this.configDiscoveryTimeout = (config.discoveryTimeout ? config.discoveryTimeout : 5);
+    this.configDiscoveryWait = (config.discoveryWait ? config.discoveryWait : 15);
+
     this.accessoryFilter = config.accessoryFilter || [];
     this.accessoryFilterInverse = config.accessoryFilterInverse || false;
     this.accessorySerialFilter = config.accessorySerialFilter || [];
     this.instanceBlacklist = config.instanceDenylist || [];
 
-    this.log.debug('Waiting 15 seconds before starting instance discovery...');
+    // eslint-disable-next-line max-len
+    this.log.debug(`Waiting ${this.configDiscoveryWait} seconds before starting instance discovery, and ${this.configDiscoveryTimeout} seconds after last device is discovered to publish to Google.`);
     this.startTimeout = setTimeout(() => {
       this.discover();
-    }, 15000);
+    }, this.configDiscoveryWait * 1000);
 
     this.reportStateSubject
       .pipe(
@@ -160,7 +166,7 @@ export class Hap {
       this.start();
       this.requestSync();
       this.hapClient.on('instance-discovered', this.requestSync.bind(this));  // Request sync on new instance discovery
-    }, 5000);
+    }, this.configDiscoveryTimeout * 1000);
   };
 
   /**
@@ -307,7 +313,7 @@ export class Hap {
    */
   public async loadAccessories(): Promise<ServiceType[]> {
     return this.hapClient.getAllServices().then((services) => {
-      if (this.config.debug && process.uptime() < 300) {
+      if (this.config.debug && process.uptime() < 600) {
         try {
           // write the discovery response to a file for debugging
           const storagePath = this.api.user.storagePath() + '/homebridge-gsh-discovery.json';
