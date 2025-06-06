@@ -6,7 +6,8 @@ All notable changes to `homebridge-gsh` will be documented in this file. This pr
 
 ### Changes
 
-- Implement channel/input selection of Television device #22
+- Implement channel/input selection of Television device #22, tks @banboobee
+- Implemented regular expression searching for accessoryFilter #23, tks @banboobee
 
 ### Fixes
 
