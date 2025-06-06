@@ -1,12 +1,15 @@
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
 import { describe, expect } from '@jest/globals';
 import { SmartHomeV1QueryRequestDevices, SmartHomeV1SyncDevices } from 'actions-on-google';
+import fs from 'fs';
 import { expectType } from 'ts-expect';
 import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
 
 // socket, log, pin: string, config: PluginConfig
+
+const trace: boolean = false; // set to true to enable trace logging
 
 class socketMock {
   on(event: string, callback: any) {
@@ -24,188 +27,294 @@ class socketMock {
   }
 }
 
-const config: PluginConfig = {
-  name: 'Google Smart Home',
-  token: '1234567890',
-  notice: 'Keep your token a secret!',
-  debug: false,
-  platform: 'google-smarthome',
-  twoFactorAuthPin: '1234',
-  accessoryFilter: [
-    'West Bedroom',
-    'Wasaga',
-    'Garage Door',
-  ],
-  accessoryFilterInverse: true,
-
-};
-
-const log = new Log(console, true);
-
-const hap = new Hap(socketMock, log, '031-45-154', config, {});
-
 describe('hap', () => {
-  describe('process the QUERY intent', () => {
-    test('wait for HAP to be Ready', async () => {
-      while (!hap.ready) {
-        // console.log('waiting for hap to be ready');
-        await sleep(500);
-      }
-      // eslint-disable-next-line no-console
-      console.log('hap ready, testing started', hap.services);
-    }, 30000);
+  describe('name filter', () => {
+    const config: PluginConfig = {
+      name: 'Google Smart Home',
+      token: '1234567890',
+      notice: 'Keep your token a secret!',
+      debug: false,
+      platform: 'google-smarthome',
+      twoFactorAuthPin: '1234',
+      accessoryFilter: [
+        'West Bedroom',
+        'Wasaga',
+        'Garage Door',
+      ],
+      accessoryFilterInverse: true,
 
-    describe('QUERY message with delay to allow manual testing', () => {
-      test('lightbulb with On/Off only', async () => {
-        const response: any = await hap.query(query);
-        // console.log('response', response);
-      });
-      test('sleeping', async () => {
-        await sleep(5000);
+    };
+
+    const log = new Log(console, true);
+
+    const hap = new Hap(socketMock, log, '031-45-154', config, {});
+
+    describe('process the QUERY intent', () => {
+      test('wait for HAP to be Ready', async () => {
+        while (!hap.ready) {
+          // console.log('waiting for hap to be ready');
+          await sleep(500);
+        }
+        // eslint-disable-next-line no-console
+        // console.log('hap ready, testing started', hap.services);
       }, 30000);
-      test('lightbulb with On/Off only', async () => {
-        const response: any = await hap.query(query);
-        // console.log('response', response);
+
+      describe('QUERY message with delay to allow manual testing', () => {
+        test('lightbulb with On/Off only', async () => {
+          const response: any = await hap.query(query);
+          // console.log('response', response);
+        });
+        test('sleeping', async () => {
+          await sleep(5000);
+        }, 30000);
+        test('lightbulb with On/Off only', async () => {
+          const response: any = await hap.query(query);
+          // console.log('response', response);
+        });
+        test('sleeping', async () => {
+          await sleep(5000);
+        }, 30000);
+        test('lightbulb with On/Off only', async () => {
+          const response: any = await hap.query(query);
+          // console.log('response', response);
+        });
       });
-      test('sleeping', async () => {
-        await sleep(5000);
+
+    });
+
+    describe('process the SYNC intent', () => {
+      test('Wait for HAP to be Ready', async () => {
+        while (!hap.ready) {
+          // console.log('waiting for hap to be ready');
+          await sleep(500);
+        }
+        // eslint-disable-next-line no-console
+        console.log('hap ready, testing started');
       }, 30000);
-      test('lightbulb with On/Off only', async () => {
-        const response: any = await hap.query(query);
+
+      describe('SYNC', () => {
+        test('Sync Response is proper and filtered', async () => {
+          const response: any = await hap.buildSyncResponse();
+          expectType<SmartHomeV1SyncDevices[]>(response);
+          expect(response).toBeDefined();
+          expect(response).toBeInstanceOf(Array);
+          expect(response).toHaveLength(4);
+
+          const expectedNames = [
+            'East Bedroom',
+            'East Bedroom Fan',
+            'Garage Door',
+            'Wasaga',
+          ];
+
+          const actualNames = response.map(device => device.name.name);
+          expect(actualNames).toEqual(expectedNames);
+
+          if (trace) {
+            fs.writeFileSync('buildSyncResponse.json', JSON.stringify(response, null, 2), 'utf8');
+          }
+          /*
+         // await fs.writeFile('buildSyncResponse.json', JSON.stringify(response, null, 2), (err: any) => {
+            if (err) {
+              // eslint-disable-next-line no-console
+              console.log(err);
+            }
+          });
+          await fs.writeFile('services.json', JSON.stringify(hap.services, null, 2), (err: any) => {
+            if (err) {
+              // eslint-disable-next-line no-console
+              console.log(err);
+            }
+          });
+          */
+          //      // console.log('response', response);
+        });
+      });
+
+    });
+
+    describe('execute', () => {
+      test('Wait for HAP to be Ready', async () => {
+        while (!hap.ready) {
+          // console.log('waiting for hap to be ready');
+          await sleep(500);
+        }
+        // eslint-disable-next-line no-console
+        console.log('hap ready, testing started');
+      }, 30000);
+
+      test('Turn Off Light', async () => {
+        const response: any = await hap.execute([executeLightOff]);
         // console.log('response', response);
+        expect(response).toBeDefined();
+        expect(response).toBeInstanceOf(Array);
+        expect(response).toHaveLength(1);
+        expect(response[0].status).toBe('SUCCESS');
       });
     });
-
-  });
-
-  describe('process the SYNC intent', () => {
-    test('Wait for HAP to be Ready', async () => {
-      while (!hap.ready) {
-        // console.log('waiting for hap to be ready');
-        await sleep(500);
-      }
-      // eslint-disable-next-line no-console
-      console.log('hap ready, testing started');
-    }, 30000);
-
-    describe('SYNC message with delay to allow manual testing', () => {
-      test('lightbulb with On/Off only', async () => {
-        const response: any = await hap.buildSyncResponse();
-        expectType<SmartHomeV1SyncDevices[]>(response);
-        /*
-       // await fs.writeFile('buildSyncResponse.json', JSON.stringify(response, null, 2), (err: any) => {
-          if (err) {
-            // eslint-disable-next-line no-console
-            console.log(err);
-          }
-        });
-        await fs.writeFile('services.json', JSON.stringify(hap.services, null, 2), (err: any) => {
-          if (err) {
-            // eslint-disable-next-line no-console
-            console.log(err);
-          }
-        });
-        */
-        //      // console.log('response', response);
+    describe('Garage Door 2fa and PIN Code', () => {
+      test('Close - 2fa not Required', async () => {
+        const response: any = await hap.execute([executeGarageClose]);
+        // console.log('response', response);
+        expect(response).toBeDefined();
+        expect(response).toBeInstanceOf(Array);
+        expect(response).toHaveLength(1);
+        expect(response[0].status).toBe('SUCCESS');
       });
+
+      /*
+      [
+        {
+          ids: [
+            '11d20d713a1ea46cd7e9b524bda80eb6d5bc7df2ee813903c697edad4a700390'
+          ],
+          status: 'ERROR',
+          errorCode: 'challengeNeeded',
+          challengeNeeded: { type: 'pinNeeded' }
+        }
+      ] */
+
+      test('Open - 2fa Required - No Pin', async () => {
+        const response: any = await hap.execute([executeGarageOpen]);
+        // console.log('response', response);
+        expect(response).toBeDefined();
+        expect(response).toBeInstanceOf(Array);
+        expect(response).toHaveLength(1);
+        expect(response[0].status).toBe('ERROR');
+        expect(response[0].errorCode).toBe('challengeNeeded');
+        expect(response[0].challengeNeeded).toBeDefined();
+        expect(response[0].challengeNeeded.type).toBeDefined();
+        expect(response[0].challengeNeeded.type).toBe('pinNeeded');
+      });
+
+      test('Open - 2fa Required - incorrect PIN', async () => {
+        const response: any = await hap.execute([executeGarageDoorOpenWithIncorrectPin]);
+        // console.log('response', response);
+        expect(response).toBeDefined();
+        expect(response).toBeInstanceOf(Array);
+        expect(response).toHaveLength(1);
+        expect(response[0].status).toBe('ERROR');
+        expect(response[0].errorCode).toBe('challengeNeeded');
+        expect(response[0].challengeNeeded).toBeDefined();
+        expect(response[0].challengeNeeded.type).toBeDefined();
+        expect(response[0].challengeNeeded.type).toBe('pinNeeded');
+      });
+
+      test.skip('Open - 2fa Required - correct PIN', async () => {
+        const response: any = await hap.execute([executeGarageDoorOpenWithCorrectPin]);
+        // console.log('response', response);
+        expect(response).toBeDefined();
+        expect(response).toBeInstanceOf(Array);
+        expect(response).toHaveLength(1);
+        expect(response[0].status).toBe('SUCCESS');
+      });
+
+      test('Close - 2fa not Required', async () => {
+        // await sleep(5000); // wait for the door to open
+        const response: any = await hap.execute([executeGarageClose]);
+        // console.log('response', response);
+        expect(response).toBeDefined();
+        expect(response).toBeInstanceOf(Array);
+        expect(response).toHaveLength(1);
+        expect(response[0].status).toBe('SUCCESS');
+      }, 10000);
     });
 
-  });
-
-  describe('execute', () => {
-    test('Wait for HAP to be Ready', async () => {
-      while (!hap.ready) {
-        // console.log('waiting for hap to be ready');
-        await sleep(500);
-      }
+    afterAll(async () => {
       // eslint-disable-next-line no-console
-      console.log('hap ready, testing started');
-    }, 30000);
-
-    test('Turn Off Light', async () => {
-      const response: any = await hap.execute([executeLightOff]);
-      // console.log('response', response);
-      expect(response).toBeDefined();
-      expect(response).toBeInstanceOf(Array);
-      expect(response).toHaveLength(1);
-      expect(response[0].status).toBe('SUCCESS');
+      console.log('destroy');
+      await hap.destroy();
     });
   });
-  describe('Garage Door 2fa and PIN Code', () => {
-    test('Close - 2fa not Required', async () => {
-      const response: any = await hap.execute([executeGarageClose]);
-      // console.log('response', response);
-      expect(response).toBeDefined();
-      expect(response).toBeInstanceOf(Array);
-      expect(response).toHaveLength(1);
-      expect(response[0].status).toBe('SUCCESS');
+
+  describe('reg exp filter', () => {
+    const config: PluginConfig = {
+      name: 'Google Smart Home',
+      token: '1234567890',
+      notice: 'Keep your token a secret!',
+      debug: false,
+      platform: 'google-smarthome',
+      twoFactorAuthPin: '1234',
+      accessoryFilter: [
+        'Bedroom',
+      ],
+      accessoryFilterInverse: true,
+
+    };
+
+    const log = new Log(console, true);
+
+    const hap = new Hap(socketMock, log, '031-45-154', config, {});
+
+    describe('process the QUERY intent', () => {
+      test('wait for HAP to be Ready', async () => {
+        while (!hap.ready) {
+          // console.log('waiting for hap to be ready');
+          await sleep(500);
+        }
+        // eslint-disable-next-line no-console
+        // console.log('hap ready, testing started', hap.services);
+      }, 30000);
     });
 
-    /*
-    [
-      {
-        ids: [
-          '11d20d713a1ea46cd7e9b524bda80eb6d5bc7df2ee813903c697edad4a700390'
-        ],
-        status: 'ERROR',
-        errorCode: 'challengeNeeded',
-        challengeNeeded: { type: 'pinNeeded' }
-      }
-    ] */
+    describe('process the SYNC intent', () => {
+      test('Wait for HAP to be Ready', async () => {
+        while (!hap.ready) {
+          // console.log('waiting for hap to be ready');
+          await sleep(500);
+        }
+        // eslint-disable-next-line no-console
+        console.log('hap ready, testing started');
+      }, 30000);
 
-    test('Open - 2fa Required - No Pin', async () => {
-      const response: any = await hap.execute([executeGarageOpen]);
-      // console.log('response', response);
-      expect(response).toBeDefined();
-      expect(response).toBeInstanceOf(Array);
-      expect(response).toHaveLength(1);
-      expect(response[0].status).toBe('ERROR');
-      expect(response[0].errorCode).toBe('challengeNeeded');
-      expect(response[0].challengeNeeded).toBeDefined();
-      expect(response[0].challengeNeeded.type).toBeDefined();
-      expect(response[0].challengeNeeded.type).toBe('pinNeeded');
+      describe('SYNC Response', () => {
+        test('Sync Response is proper and filtered', async () => {
+          const response: any = await hap.buildSyncResponse();
+          expectType<SmartHomeV1SyncDevices[]>(response);
+          expect(response).toBeDefined();
+          expect(response).toBeInstanceOf(Array);
+          expect(response).toHaveLength(4);
+
+          const expectedNames = [
+            'East Bedroom',
+            'East Bedroom Fan',
+            'West Bedroom',
+            'West Bedroom Fan',
+          ];
+
+          const actualNames = response.map(device => device.name.name);
+          expect(actualNames).toEqual(expectedNames);
+
+          if (trace) {
+            fs.writeFileSync('buildSyncResponse.json', JSON.stringify(response, null, 2), 'utf8');
+          }
+          /*
+         // await fs.writeFile('buildSyncResponse.json', JSON.stringify(response, null, 2), (err: any) => {
+            if (err) {
+              // eslint-disable-next-line no-console
+              console.log(err);
+            }
+          });
+          await fs.writeFile('services.json', JSON.stringify(hap.services, null, 2), (err: any) => {
+            if (err) {
+              // eslint-disable-next-line no-console
+              console.log(err);
+            }
+          });
+          */
+          //      // console.log('response', response);
+        });
+      });
+
     });
 
-    test('Open - 2fa Required - incorrect PIN', async () => {
-      const response: any = await hap.execute([executeGarageDoorOpenWithIncorrectPin]);
-      // console.log('response', response);
-      expect(response).toBeDefined();
-      expect(response).toBeInstanceOf(Array);
-      expect(response).toHaveLength(1);
-      expect(response[0].status).toBe('ERROR');
-      expect(response[0].errorCode).toBe('challengeNeeded');
-      expect(response[0].challengeNeeded).toBeDefined();
-      expect(response[0].challengeNeeded.type).toBeDefined();
-      expect(response[0].challengeNeeded.type).toBe('pinNeeded');
+    afterAll(async () => {
+      // eslint-disable-next-line no-console
+      console.log('destroy');
+      await hap.destroy();
     });
-
-    test.skip('Open - 2fa Required - correct PIN', async () => {
-      const response: any = await hap.execute([executeGarageDoorOpenWithCorrectPin]);
-      // console.log('response', response);
-      expect(response).toBeDefined();
-      expect(response).toBeInstanceOf(Array);
-      expect(response).toHaveLength(1);
-      expect(response[0].status).toBe('SUCCESS');
-    });
-
-    test('Close - 2fa not Required', async () => {
-      // await sleep(5000); // wait for the door to open
-      const response: any = await hap.execute([executeGarageClose]);
-      // console.log('response', response);
-      expect(response).toBeDefined();
-      expect(response).toBeInstanceOf(Array);
-      expect(response).toHaveLength(1);
-      expect(response[0].status).toBe('SUCCESS');
-    }, 10000);
-  });
-
-  afterAll(async () => {
-    // eslint-disable-next-line no-console
-    console.log('destroy');
-    await hap.destroy();
   });
 });
-
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
