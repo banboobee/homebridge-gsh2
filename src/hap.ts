@@ -341,9 +341,9 @@ export class Hap {
         return false;
       };
       if (this.accessoryFilterInverse) {
-        services = services.filter(x => searchList(x.serviceName, this.accessoryFilter));
+        services = services.filter(x => searchList(x.serviceName, compiledAccessoryFilter));
       } else {
-        services = services.filter(x => !searchList(x.serviceName, this.accessoryFilter));
+        services = services.filter(x => !searchList(x.serviceName, compiledAccessoryFilter));
       }
       services = services.filter(x => !this.accessorySerialFilter.includes(x.accessoryInformation['Serial Number']));
       // if 2fa is forced for this service type, but a pin has not been set ignore the service
