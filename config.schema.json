@@ -139,7 +139,7 @@
         },
         {
           "type": "help",
-          "helpvalue": "<h5><B>Accessory Filter - by name</b></h5><em class='primary-text'>Enter the names (as displayed in the Google Home app) of the accessories you don't want to control from the Google Assistant.</em>"
+          "helpvalue": "<h5><B>Accessory Filter - by name</b></h5><em class='primary-text'>Enter the names (as displayed in the Google Home app) of the accessories you don't want to control from the Google Assistant. Also accepts regular expressions as a name.</em>"
         },
         {
           "nodescription": true,
