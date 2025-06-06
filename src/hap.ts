@@ -40,6 +40,8 @@ export class Hap {
 
   public ready: boolean;
 
+  private dummy = () => {};
+  
   /* GSH Supported types */
   types = {
     Door: new Door(),
@@ -53,11 +55,13 @@ export class Hap {
     Outlet: new Switch('action.devices.types.OUTLET'),
     SecuritySystem: new SecuritySystem(),
     Switch: new Switch('action.devices.types.SWITCH'),
-    Television: new Television(),
+    Television: new Television(this),
     TemperatureSensor: new TemperatureSensor(this),
     Thermostat: new Thermostat(this),
     Window: new Window(),
     WindowCovering: new WindowCovering(),
+    Speaker: this.dummy,
+    InputSource: this.dummy,
   };
 
   /* event tracking */
@@ -87,6 +91,8 @@ export class Hap {
     Characteristic.CurrentRelativeHumidity,
     Characteristic.SecuritySystemTargetState,
     Characteristic.SecuritySystemCurrentState,
+    Characteristic.ActiveIdentifier,
+    Characteristic.Mute,
   ];
 
   instanceBlacklist: Array<string> = [];
@@ -188,12 +194,13 @@ export class Hap {
    * Build Google SYNC intent payload
    */
   async buildSyncResponse(): Promise<SmartHomeV1SyncDevices[]> {
-    const devices = this.services.map((service) => {
-      if (!this.types[service.type]) {
-        // this.log.debug(`Unsupported service type ${service.type}`);
-        return;
-      }
-      // console.log('buildSyncResponse', service);
+    const devices = this.services.filter((service) =>
+      this.types?.[service.type]?.sync
+    ).map((service) => {
+      // if (!this.types[service.type]) {
+      //   // this.log.debug(`Unsupported service type ${service.type}`);
+      //   return;
+      // }
       return this.types[service.type].sync(service);
     });
     return devices;
@@ -245,7 +252,7 @@ export class Hap {
     for (const command of commands) {
       for (const device of command.devices) {
         const service = this.services.find(x => x.uniqueId === device.id);
-        this.log.debug(`Processing command ${command.execution[0].command} for ${device.id} and ${service}`);
+        this.log.debug(`Processing command ${command.execution[0].command} for ${device.id} and ${service.serviceName}`);
         if (service) {
           // check if two factor auth is required, and if we have it
           if (this.config.twoFactorAuthPin && this.types[service.type].twoFactorRequired
@@ -382,6 +389,7 @@ export class Hap {
 
     for (const uniqueId of pendingStateReport) {
       const service = this.services.find(x => x.uniqueId === uniqueId);
+      if (!this.types?.[service.type]?.query) continue;
       states[service.uniqueId] = this.types[service.type].query(service);
     }
 
@@ -395,10 +403,12 @@ export class Hap {
     if (!this.services.length) {
       return;
     }
-    this.services.map((service) => {
-      if (!this.types[service.type]) {
-        return;
-      }
+    this.services.filter((service) => 
+      this.types?.[service.type]?.query
+    ).map((service) => {
+      // if (!this.types[service.type]) {
+      //   return;
+      // }
       return states[service.uniqueId] = this.types[service.type].query(service);
     });
     return await this.sendStateReport(states);
