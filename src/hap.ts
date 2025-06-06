@@ -201,6 +201,7 @@ export class Hap {
       //   // this.log.debug(`Unsupported service type ${service.type}`);
       //   return;
       // }
+      // // console.log('buildSyncResponse', service);
       return this.types[service.type].sync(service);
     });
     return devices;
