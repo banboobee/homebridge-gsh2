@@ -327,17 +327,17 @@ export class Hap {
       }
       services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
-      const searchList = (target:string, list:string[]): boolean => {
-	if (target) {
-	  for (const x of list) {
-	    if (target.search(x) !== -1) {
-	      this.log.debug(`${this.accessoryFilterInverse ? 'Including' : 'Skipping'} service '${target}' - matches accessorySerialFilter '${x}'`);
-	      return true;
-	    }
-	  }
-	}
-	return false;
-      }
+      const searchList = (target: string, list: string[]): boolean => {
+        if (target) {
+          for (const x of list) {
+            if (target.search(x) !== -1) {
+              this.log.debug(`${this.accessoryFilterInverse ? 'Including' : 'Skipping'} service '${target}' - matches accessorySerialFilter '${x}'`);
+              return true;
+            }
+          }
+        }
+        return false;
+      };
       if (this.accessoryFilterInverse) {
         services = services.filter(x => searchList(x.serviceName, this.accessoryFilter));
       } else {
