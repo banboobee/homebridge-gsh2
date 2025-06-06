@@ -1,11 +1,10 @@
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
 import { Hap } from '../hap';
-import { Television } from './television';
 import { PluginConfig } from '../interfaces';
+import { Television } from './television';
 
 import { Log } from '../logger';
 
-import { Thermostat } from './thermostat';
 
 class socketMock {
   on(event: string, callback: any) {
@@ -41,13 +40,21 @@ const television = new Television(hap);
 describe('television', () => {
   describe('sync message', () => {
     it('television with On/Off only', async () => {
+      const attributes = {
+        'availableApplications': [],
+        'commandOnlyOnOff': false,
+        'queryOnlyOnOff': false,
+        'supportActivityState': false,
+        'supportPlaybackState': false,
+        'transportControlSupportedCommands': [],
+      };
       const response: any = television.sync(televisionServiceOnOff);
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.TV');
       expect(response.traits).toContain('action.devices.traits.OnOff');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
       expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
-      expect(response.attributes).not.toBeDefined();
+      expect(response.attributes).toEqual(attributes);
       // await sleep(10000)
     });
   });
