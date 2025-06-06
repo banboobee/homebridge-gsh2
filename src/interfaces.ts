@@ -16,6 +16,8 @@ export interface PluginConfig extends PlatformConfig {
   forceFahrenheit?: boolean;
   betaServer?: boolean;
   showHeaterCoolerAsACUnit?: boolean;
+  discoveryTimeout?: number;
+  discoveryWait?: number;
 }
 
 export interface Instance {

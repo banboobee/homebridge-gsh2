@@ -5,6 +5,12 @@ import path from 'path';
 import { Builder, By, until, WebDriver } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome';
 
+import dotenv from 'dotenv';
+
+const envPath = '../homebridge-gsh-server/lightsail/installStack/.env.clone-gsh.homebridge.ca';
+// Load environment variables from .env
+dotenv.config({ path: envPath });
+
 let driver: WebDriver;
 
 const describeIf = (condition: boolean, ...args: Parameters<typeof describe>) =>
@@ -16,8 +22,8 @@ let cancelCreateTests = false;
 let cancelCancelTests = false;
 const trace = true;
 
-describe.skip('Prepare Environment', () => {
-  test('should clear the Google Smart Home token in config.json', () => {
+describe('Prepare Environment', () => {
+  test.skip('should clear the Google Smart Home token in config.json', () => {
     const configPath = path.resolve(process.cwd(), 'test/hbConfig/config.json');
     // console.log('Config path:', configPath);
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
@@ -122,8 +128,8 @@ describe('Plugin Config', () => {
 
       const body = await driver.findElement(By.css('body'));
       const text = await body.getText();
-      expect(text).toContain('The Homebridge Google Smart Home plugin allows you to control your Homebridge accessories from a Google Home enabled \
-      smart speaker or the Google Home mobile app');
+      // eslint-disable-next-line max-len
+      expect(text).toContain('The Homebridge Google Smart Home plugin allows you to control your Homebridge accessories from a Google Home enabled smart speaker or the Google Home mobile app');
 
       await driver.switchTo().defaultContent();
     });
@@ -207,8 +213,34 @@ describe('Plugin Config', () => {
 
           const url = await driver.getCurrentUrl();
           console.log('Redirected URL after click:', url);
-          expect(url).toContain('https://clone-gsh.homebridge.ca/link-account');
+          expect(url).toContain('https://accounts.google.com/v3/signin');
         }, 20000);
+
+
+        test('should enter Google login credentials', async () => {
+          await safeSwitchToWindow(popupWindow);
+          console.log('4 Current URL:', await driver.getCurrentUrl());
+          const emailInput = await driver.wait(
+            until.elementLocated(By.id('identifierId')),
+          );
+          await emailInput.clear();
+          await emailInput.sendKeys(process.env.GOOGLE_USERNAME);
+          console.log('5 Current URL:', await driver.getCurrentUrl());
+          await driver.findElement(By.id('identifierNext')).click();
+          console.log('6 Current URL:', await driver.getCurrentUrl());
+          // const html = await driver.getPageSource();
+          // fs.writeFileSync('test/hbConfig/google-login.html', html);
+          // console.log(html);
+          const passwordInput = await driver.wait(
+            until.elementLocated(By.name('password')),
+          );
+          console.log('7 Current URL:', await driver.getCurrentUrl());
+          await passwordInput.clear();
+          await passwordInput.sendKeys(process.env.GOOGLE_PASSWORD);
+          console.log('8 Current URL:', await driver.getCurrentUrl());
+          await driver.findElement(By.id('passwordNext')).click();
+
+        });
 
         // No need for actual login, browser used stored credentials
 
@@ -248,6 +280,10 @@ describe('Plugin Config', () => {
 
 
       });
+      test('sleep 10 seconds to observe the popup', async () => {
+        console.log('Sleeping for 10 seconds to observe the popup...');
+        await driver.sleep(120000);
+      }, 121000);
     });
   });
 
@@ -274,7 +310,7 @@ describe('Plugin Config', () => {
         cancelCreateTests = true;
         console.log('268: Canceling all tests due to Trial status');
       }
-      expect(statusText).toMatch(/Account Status: Trial, Expiry: \d{1,2} \w{3} 20\d{2}, UTC/); // ✅ RegExp
+      expect(statusText).toMatch(/Account Status: Trial, Expiry: \d{1,2} \w{3} 20\d{2}/); // ✅ RegExp
       originalWindow = await driver.getWindowHandle();
       await driver.switchTo().defaultContent();
     });
@@ -349,6 +385,19 @@ describe('Plugin Config', () => {
       }
       //await driver.findElement(By.id('btnNext')).click();
 
+      try {
+        const nextButton = await driver.findElement(By.id('btnNext'));
+        await nextButton.click();
+        if (trace) {
+          console.log('400: Clicked Next button');
+        }
+        // Optionally wait for password field to be present
+        await driver.wait(until.elementLocated(By.id('password')), 5000);
+      } catch (err) {
+        if (trace) {
+          console.log('Next button not shown, skipping to password entry');
+        }
+      }
       //      sleep(1000);
       if (trace) {
         console.log('327: ', await driver.getTitle());
@@ -361,11 +410,11 @@ describe('Plugin Config', () => {
 
       await driver.findElement(By.id('password')).sendKeys(process.env.PAYPAL_PER_PASSWORD);
 
-
+      console.log('421: password entered');
       await driver.findElement(By.id('btnLogin')).click();
-
+      console.log('423: password entered');
       await driver.wait(until.titleIs('PayPal Checkout - Choose a way to pay'));
-
+      console.log('425: Choose a way to pay');
       expect(await driver.getTitle()).toContain('PayPal Checkout - Choose a way to pay');
 
       if (trace) {
