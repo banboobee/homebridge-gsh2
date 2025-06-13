@@ -7,10 +7,12 @@ import { Characteristic } from './hap-types';
 
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
-import { Door } from './types/door';
+import { Plugin } from './main';
 
 import type { API } from 'homebridge';
 import { createHash } from 'node:crypto';
+
+import { Door } from './types/door';
 import { Fan } from './types/fan';
 import { Fanv2 } from './types/fan-v2';
 import { GarageDoorOpener } from './types/garage-door-opener';
@@ -28,6 +30,7 @@ import { Window } from './types/window';
 import { WindowCovering } from './types/window-covering';
 
 export class Hap {
+  plugin: Plugin;
   socket;
   log: Log;
   pin: string;
@@ -106,10 +109,11 @@ export class Hap {
   accessorySerialFilter: Array<string> = [];
   // deviceNameMap: Array<{ replace: string; with: string }> = [];
 
-  constructor(socket, log, pin: string, config: PluginConfig, api) {
+  constructor(socket, plugin, pin: string, config: PluginConfig, api) {
+    this.plugin = plugin;
     this.config = config;
     this.socket = socket;
-    this.log = log;
+    this.log = plugin.log;
     this.pin = pin;
     this.api = api;
 
@@ -213,6 +217,18 @@ export class Hap {
       // // console.log('buildSyncResponse', service);
       return this.types[service.type].sync(service);
     });
+
+    const latestSync: Record<string, any> = this.plugin.platform.accessory.context.latestSync;
+    // console.log(`caching ${Object.keys(latestSync).length} devices.`);
+    for (const x of devices) {          // update sync response
+      latestSync[x.id].sync = x;
+    }
+    for (const x of Object.values(latestSync)) {
+      if (x.unavailable && x.sync) {    // keep as zombie device
+        devices.push(x.sync);
+      }
+    }
+    
     return devices;
   }
 
@@ -225,7 +241,7 @@ export class Hap {
     }
     this.syncTimeout = setTimeout(() => {
       this.log.info('Sending Sync Request');
-      this.socket.sendJson({
+      this.socket?.sendJson({
         type: 'request-sync',
       });
     }, 15000);
@@ -375,6 +391,43 @@ export class Hap {
         };
       });      // The embeded uniqueId formula is different with Hap Client
       this.log.debug(`Returned ${services.length} accessories from Homebridge - post filter`);
+
+      const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update
+      const latestSync: Record<string, any> = this.plugin.platform.accessory.context.latestSync;
+      for (const x of Object.values(latestSync)) {
+        x.unavailable++;
+      }
+      for (const x of services) {
+        if (!this.types?.[x.type]?.sync) {      // speaker, inputSource...
+          continue;
+        }
+        if (!latestSync[x.uniqueId]) {          // new device
+          this.log.debug(`Found new accessory '${x.serviceName}'. aid:${x.aid}, iid:${x.iid}, username:${x.instance.username}`);
+          latestSync[x.uniqueId] = {
+            sync: undefined,
+            unavailable: 0,
+          };
+        } else {                                // consistent device
+          latestSync[x.uniqueId].unavailable = 0;
+        }
+      }
+      for (const x of Object.keys(latestSync)) {
+        if (!latestSync[x]?.unavailable) {	// consistent or wrong record
+          continue;
+        }
+        const response = latestSync[x]?.sync;	// inconsistent records
+        const name = response?.name.name;
+        const aid = response?.customData.aid;
+        const iid = response?.customData.iid;
+        const username = response?.customData.instanceUsername;
+        if (latestSync[x].unavailable > lostlimit) {  // delete the device
+          this.log.warn(`Removed accessory '${name}' due to exceeding missed count limit ${lostlimit}. aid:${aid}, iid:${iid}, username:${username}`);
+          delete latestSync[x];
+        } else if (latestSync[x].unavailable) {     // keep as zombie device
+          this.log.warn(`Failed to find accessory '${name}' ${latestSync[x].unavailable} times. aid:${aid}, iid:${iid}, username:${username}`);
+        }
+      }
+
       return services;
     }).catch((e) => {
       if (e.response?.status === 401) {
@@ -452,7 +505,7 @@ export class Hap {
     };
     this.log.debug('Sending State Report');
     this.log.debug(JSON.stringify(payload, null, 2));
-    this.socket.sendJson(payload);
+    this.socket?.sendJson(payload);
   }
 
   /**

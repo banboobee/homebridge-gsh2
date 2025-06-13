@@ -4,15 +4,17 @@ import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 import * as querystring from 'node:querystring';
 
-import type { API } from 'homebridge';
+import type { API, Service, Characteristic } from 'homebridge';
 import { Hap } from './hap';
 import { PluginConfig } from './interfaces';
 import { Log } from './logger';
 import { SERVER_ADDRESS } from './settings';
+import { HomebridgeGoogleSmartHome } from './platform';
 
 import * as WebSocketClient from 'ws';
 
 export class Plugin {
+  public platform: HomebridgeGoogleSmartHome;
   public log: Log;
   public config: PluginConfig;
   public homebridgeConfig;
@@ -23,8 +25,9 @@ export class Plugin {
 
 
 
-  constructor(log, config: PluginConfig, homebridgeConfig, api) {
-    this.log = new Log(log, config.debug);
+  constructor(platform, config: PluginConfig, homebridgeConfig, api) {
+    this.platform = platform;
+    this.log = new Log(platform.log, config.debug);
     this.config = config;
     this.homebridgeConfig = homebridgeConfig;
     this.api = api;
@@ -52,14 +55,23 @@ export class Plugin {
 
     const socket = new WebSocket(`${serverUrl}?${querystring.stringify(qs)}`, { options: options });
 
-    this.hap = new Hap(socket, this.log, this.homebridgeConfig.bridge.pin, this.config, this.api);
+    this.hap = new Hap(socket, this, this.homebridgeConfig.bridge.pin, this.config, this.api);
 
     // listen for websocket status events, connect and disconnect events, errors, etc.
-    socket.on('websocket-status', (status) => {
+    socket?.on('websocket-status', (status) => {
+      const service: typeof Service = platform.api.hap.Service;
+      const characteristic: typeof Characteristic = platform.api.hap.Characteristic;
       this.log.info(`Cloud Server Status: ${status}`);
+      if (socket.isConnected()) {
+        platform.accessory.getService(service.ContactSensor)
+          .setCharacteristic(characteristic.ContactSensorState, characteristic.ContactSensorState.CONTACT_DETECTED);
+      } else {
+        platform.accessory.getService(service.ContactSensor)
+          .setCharacteristic(characteristic.ContactSensorState, characteristic.ContactSensorState.CONTACT_NOT_DETECTED);
+      }
     });
 
-    socket.on('json', async (req) => {
+    socket?.on('json', async (req) => {
       if (req.serverMessage) {
         this.log.warn(`Cloud Server Message: ${req.serverMessage}`);
       }
@@ -69,7 +81,7 @@ export class Plugin {
       }
 
       const res = (response) => {
-        socket.sendJson({
+        socket?.sendJson({
           type: 'response',
           requestId: req.requestId,
           body: response,
