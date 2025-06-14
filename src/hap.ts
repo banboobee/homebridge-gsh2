@@ -355,6 +355,7 @@ export class Hap {
       }
       services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
+      services = services.filter(x => !this.instanceBlacklist.find(y => y === x?.instance?.username));
       // Pre-compile accessoryFilter strings into RegExp objects
       const compiledAccessoryFilter = this.accessoryFilter.map(filter => new RegExp(filter));
       const searchList = (target: string, regexList: RegExp[]): boolean => {
