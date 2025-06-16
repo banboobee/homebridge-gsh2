@@ -22,6 +22,7 @@ import { SecuritySystem } from './types/security-system';
 import { Switch } from './types/switch';
 import { Television } from './types/television';
 import { ContactSensor } from './types/contact-sensor';
+import { OccupancySensor } from './types/occupancy-sensor';
 import { TemperatureSensor } from './types/temperature-sensor';
 import { Thermostat } from './types/thermostat';
 import { Window } from './types/window';
@@ -66,6 +67,7 @@ export class Hap {
     Speaker: this.dummy,
     InputSource: this.dummy,
     ContactSensor: new ContactSensor(),
+    OccupancySensor: new OccupancySensor(),
   };
 
   /* event tracking */
@@ -98,6 +100,7 @@ export class Hap {
     Characteristic.ActiveIdentifier,
     Characteristic.Mute,
     Characteristic.ContactSensorState,
+    Characteristic.OccupancyDetected,
   ];
 
   instanceBlacklist: Array<string> = [];
