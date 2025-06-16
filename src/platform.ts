@@ -14,7 +14,7 @@ export class HomebridgeGoogleSmartHome {
   public accessory: PlatformAccessory;
   public readonly accessories: Map<string, PlatformAccessory> = new Map();
   public plugin: Plugin;
-  private manualSyncTimeout: NodeJS.Timeout = null;
+  private manualSyncTimeout: NodeJS.Timeout | null = null;
 
   constructor(
     public log,
