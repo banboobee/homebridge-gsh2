@@ -58,7 +58,7 @@ export class Plugin {
     this.hap = new Hap(socket, this, this.homebridgeConfig.bridge.pin, this.config, this.api);
 
     // listen for websocket status events, connect and disconnect events, errors, etc.
-    socket?.on('websocket-status', (status) => {
+    socket.on('websocket-status', (status) => {
       const service: typeof Service = platform.api.hap.Service;
       const characteristic: typeof Characteristic = platform.api.hap.Characteristic;
       this.log.info(`Cloud Server Status: ${status}`);
