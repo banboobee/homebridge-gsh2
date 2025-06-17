@@ -21,6 +21,8 @@ import { LockMechanism } from './types/lock-mechanism';
 import { SecuritySystem } from './types/security-system';
 import { Switch } from './types/switch';
 import { Television } from './types/television';
+import { ContactSensor } from './types/contact-sensor';
+import { OccupancySensor } from './types/occupancy-sensor';
 import { TemperatureSensor } from './types/temperature-sensor';
 import { Thermostat } from './types/thermostat';
 import { Window } from './types/window';
@@ -37,6 +39,8 @@ export class Hap {
   private discoveryTimeout: NodeJS.Timeout;
   private syncTimeout: NodeJS.Timeout;
   private api: API;
+  private configDiscoveryTimeout: number;
+  private configDiscoveryWait: number;
 
   public ready: boolean;
 
@@ -62,6 +66,8 @@ export class Hap {
     WindowCovering: new WindowCovering(),
     Speaker: this.dummy,
     InputSource: this.dummy,
+    ContactSensor: new ContactSensor(),
+    OccupancySensor: new OccupancySensor(),
   };
 
   /* event tracking */
@@ -93,6 +99,8 @@ export class Hap {
     Characteristic.SecuritySystemCurrentState,
     Characteristic.ActiveIdentifier,
     Characteristic.Mute,
+    Characteristic.ContactSensorState,
+    Characteristic.OccupancyDetected,
   ];
 
   instanceBlacklist: Array<string> = [];
@@ -108,15 +116,19 @@ export class Hap {
     this.pin = pin;
     this.api = api;
 
+    this.configDiscoveryTimeout = (config.discoveryTimeout ? config.discoveryTimeout : 5);
+    this.configDiscoveryWait = (config.discoveryWait ? config.discoveryWait : 15);
+
     this.accessoryFilter = config.accessoryFilter || [];
     this.accessoryFilterInverse = config.accessoryFilterInverse || false;
     this.accessorySerialFilter = config.accessorySerialFilter || [];
     this.instanceBlacklist = config.instanceDenylist || [];
 
-    this.log.debug('Waiting 15 seconds before starting instance discovery...');
+    // eslint-disable-next-line max-len
+    this.log.debug(`Waiting ${this.configDiscoveryWait} seconds before starting instance discovery, and ${this.configDiscoveryTimeout} seconds after last device is discovered to publish to Google.`);
     this.startTimeout = setTimeout(() => {
       this.discover();
-    }, 15000);
+    }, this.configDiscoveryWait * 1000);
 
     this.reportStateSubject
       .pipe(
@@ -166,7 +178,7 @@ export class Hap {
       this.start();
       this.requestSync();
       this.hapClient.on('instance-discovered', this.requestSync.bind(this));  // Request sync on new instance discovery
-    }, 5000);
+    }, this.configDiscoveryTimeout * 1000);
   };
 
   /**
@@ -315,7 +327,7 @@ export class Hap {
    */
   public async loadAccessories(): Promise<ServiceType[]> {
     return this.hapClient.getAllServices().then((services) => {
-      if (this.config.debug && process.uptime() < 300) {
+      if (this.config.debug && process.uptime() < 600) {
         try {
           // write the discovery response to a file for debugging
           const storagePath = this.api.user.storagePath() + '/homebridge-gsh-discovery.json';
@@ -327,10 +339,24 @@ export class Hap {
       }
       services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
+      services = services.filter(x => !this.instanceBlacklist.find(y => y === x?.instance?.username));
+      // Pre-compile accessoryFilter strings into RegExp objects
+      const compiledAccessoryFilter = this.accessoryFilter.map(filter => new RegExp(filter));
+      const searchList = (target: string, regexList: RegExp[]): boolean => {
+        if (target) {
+          for (const regex of regexList) {
+            if (regex.test(target)) {
+              this.log.debug(`${this.accessoryFilterInverse ? 'Including' : 'Skipping'} service '${target}' - matches accessoryFilter '${regex}'`);
+              return true;
+            }
+          }
+        }
+        return false;
+      };
       if (this.accessoryFilterInverse) {
-        services = services.filter(x => this.accessoryFilter.includes(x.serviceName));
+        services = services.filter(x => searchList(x.serviceName, compiledAccessoryFilter));
       } else {
-        services = services.filter(x => !this.accessoryFilter.includes(x.serviceName));
+        services = services.filter(x => !searchList(x.serviceName, compiledAccessoryFilter));
       }
       services = services.filter(x => !this.accessorySerialFilter.includes(x.accessoryInformation['Serial Number']));
       // if 2fa is forced for this service type, but a pin has not been set ignore the service

@@ -4,11 +4,8 @@
       <p [innerHTML]="'accessories.message_must_use_insecure_mode' | translate"></p>
       <p class="mb-0">
         <span>{{ 'accessories.message_please_see' | translate }}</span>
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control"
-        >
+        <a target="_blank" rel="noopener noreferrer"
+          href="https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control">
           https://github.com/homebridge/homebridge-config-ui-x/wiki/Enabling-Accessory-Control
         </a>
         <span>{{ 'accessories.message_for_more_information' | translate }}</span>
@@ -17,54 +14,82 @@
   </div>
 
   <div *ngIf="env.enableAccessories">
-    <p [innerHTML]="'plugins.settings.custom.homebridge-gsh.message_about' | translate"></p>
-    <p *ngIf="!pluginConfig.token" translate="plugins.settings.custom.homebridge-gsh.message_account_link_required"></p>
+    <span [innerHTML]="'plugins.settings.custom.homebridge-gsh.message_about' | translate"></span>
+    <p *ngIf="!pluginConfig.token" translate="plugins.settings.custom.homebridge-gsh.message_account_link_required">
+    </p>
 
     <div *ngIf="!pluginConfig?.token">
       <app-markdown-viewer [filename]="'NEWUSER.md'"></app-markdown-viewer>
-   </div>
+    </div>
     <div class="text-center" *ngIf="!pluginConfig.token">
       <button class="btn btn-primary btn-lg" (click)="linkAccount()">
         {{ 'plugins.settings.custom.homebridge-gsh.label_link_account' | translate }}
       </button>
-
-      
     </div>
 
     <div *ngIf="pluginConfig.token" class="mt-1">
-      <div class="text-center">
-        <h4 class="mt-2">
-          <img *ngIf="linkType === 'google'" src="assets/google-logo.svg" alt="Google Logo" style="height: 40px;" />
-          <img *ngIf="linkType === 'github'" src="assets/github-mark.svg" alt="GitHub Logo" style="height: 40px;" />
-          {{ linkType | titlecase }} {{ 'plugins.settings.custom.homebridge-gsh.label_account_linked' | translate }}
-        </h4>
-        <p class="text-muted small">
-          <span class="text-dark fw-bold">User ID: </span>
-          <span class="copyable">
-            {{ user_id }}&nbsp;
+      <div class="card">
+        <div class="card-body p-3">
+          <h4 class="card-title d-flex align-items-center justify-content-center mb-3">
+            <img *ngIf="linkType === 'google'" class="me-2" src="assets/google-logo.svg" alt="Google Logo"
+              style="height: 48px;" />
+            <img *ngIf="linkType === 'github'" class="invert-on-dark me-2" src="assets/github-mark.svg"
+              alt="GitHub Logo" style="height: 48px;" />
+            <span>{{ linkType | titlecase }} {{ 'plugins.settings.custom.homebridge-gsh.label_account_linked' |
+              translate }}</span>
+          </h4>
+          <ul class="list-group list-group-flush">
+
+            <li class="list-group-item d-flex justify-content-between align-items-center p-2" *ngIf="userData">
+              <span class="fw-bold">
+                <img src="assets/google-home.svg" alt="Google Home Icon"
+                  style="width: 24px; height: 24px; vertical-align: middle; margin-right: 8px;" />
+                Google Home App:
+              </span>
+              <span class="badge" [ngClass]="userData.gshNotLinked ? 'bg-danger' : 'bg-success'">
+                {{ userData.gshNotLinked ? 'Not Linked' : 'Linked' }}
+              </span>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between align-items-center p-2">
+              <span class="fw-bold">User ID:</span>
+              <span class="text-break">{{ user_id }}</span>
+            </li>
+
+            <li class="list-group-item d-flex justify-content-between align-items-center p-2"
+              *ngIf="userData && userData.subscriptionRequired">
+              <span class="fw-bold">Account Status:</span>
+              <span class="text-break">{{ userData.accountStatus.text }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div *ngIf="pluginConfig.token && userData && userData.gshNotLinked" class="alert alert-info mt-3" role="alert"
+        style="text-align: left;">
+        <p>
+          <strong>Complete Setup:</strong> Search for <strong>Homebridge</strong> in the Google Home app and link the
+          action to finalize your setup.
+        </p>
+        <div>
+          <span style="white-space: nowrap;">
+            📖 <a href="https://github.com/homebridge-plugins/homebridge-gsh/wiki#add-homebridge-to-google-home-app"
+              target="_blank" rel="noopener noreferrer">
+              Further instructions
+            </a>
           </span>
-        </p>
+        </div>
       </div>
 
-      <app-user-data
-      [pluginConfig]="pluginConfig"
-      [linkDomain]="linkDomain"
-      [user_id]="user_id">
-    </app-user-data>
+      <app-user-data [pluginConfig]="pluginConfig" [linkDomain]="linkDomain" [user_id]="user_id"
+        (userDataChange)="onUserDataChange($event)">
+      </app-user-data>
 
-      <div class="mt-3" *ngIf="justLinked">
-        <p class="primary-text">
-          <strong>
-            {{ 'plugins.settings.custom.homebridge-gsh.message_homebridge_restart_required' | translate }}
-          </strong>
-        </p>
+      <div class="alert alert-info mt-3" role="alert" *ngIf="justLinked">
+        <strong>
+          {{ 'plugins.settings.custom.homebridge-gsh.message_homebridge_restart_required' | translate }}
+        </strong>
       </div>
-    </div>
-
-    <div class="mt-3" *ngIf="pluginConfig.token">
-      Search for 
-        Homebridge in the Google Home app
-      and link the action to complete setup.
     </div>
   </div>
 </div>
