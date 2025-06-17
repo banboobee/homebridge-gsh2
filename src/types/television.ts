@@ -99,7 +99,7 @@ export class Television extends ghToHap implements ghToHap_t {
       attributes.availableChannels = [];
       for (const c of instance.channels) {
         const n = [c.ConfiguredName];
-        const a = this.hap.config.channelAlias.find(x => x.channel === c.ConfiguredName);
+        const a = this.hap.config.channelAlias?.find(x => x.channel === c.ConfiguredName);
         if (a) {
           for (const x of a.alias) {
             n.push(x);
