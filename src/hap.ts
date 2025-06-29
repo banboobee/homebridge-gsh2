@@ -103,7 +103,6 @@ export class Hap {
     Characteristic.OccupancyDetected,
   ];
 
-  instanceBlacklist: Array<string> = [];
   accessoryFilter: Array<string> = [];
   accessoryFilterInverse: boolean;
   accessorySerialFilter: Array<string> = [];
@@ -122,7 +121,7 @@ export class Hap {
     this.accessoryFilter = config.accessoryFilter || [];
     this.accessoryFilterInverse = config.accessoryFilterInverse || false;
     this.accessorySerialFilter = config.accessorySerialFilter || [];
-    this.instanceBlacklist = config.instanceDenylist || [];
+    config.instanceBlacklist = config.instanceDenylist || [];
 
     // eslint-disable-next-line max-len
     this.log.debug(`Waiting ${this.configDiscoveryWait} seconds before starting instance discovery, and ${this.configDiscoveryTimeout} seconds after last device is discovered to publish to Google.`);
@@ -339,7 +338,6 @@ export class Hap {
       }
       services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
-      services = services.filter(x => !this.instanceBlacklist.find(y => y === x?.instance?.username));
       // Pre-compile accessoryFilter strings into RegExp objects
       const compiledAccessoryFilter = this.accessoryFilter.map(filter => new RegExp(filter));
       const searchList = (target: string, regexList: RegExp[]): boolean => {
