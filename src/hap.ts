@@ -104,6 +104,7 @@ export class Hap {
     Characteristic.Mute,
     Characteristic.OccupancyDetected,
     Characteristic.ContactSensorState,
+    Characteristic.CurrentMediaState,
   ];
 
   instanceBlacklist: Array<string> = [];
