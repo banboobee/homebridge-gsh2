@@ -1,56 +1,25 @@
 import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
-import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
-export class TemperatureSensor extends ghToHap implements ghToHap_t {
-  constructor(
-    private hap: Hap,
-  ) {
-    super();
-  }
-
+export class Battery extends ghToHap implements ghToHap_t {
   sync(service: ServiceType): SmartHomeV1SyncDevices {
-    const traits = [
-      'action.devices.traits.TemperatureControl',
-    ];
-    const attributes = {
-      queryOnlyTemperatureControl: true,
-      temperatureUnitForUX: this.hap.config.forceFahrenheit ? 'F' : 'C',
-    } as any;
-
-    // check if the sensor has the humidity characteristic
-    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentRelativeHumidity)) {
-      traits.push('action.devices.traits.HumiditySetting');
-      attributes['queryOnlyHumiditySetting'] = true;
-    }
-
-    // check if the sensor has the batteryLevel characteristic
-    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.BatteryLevel)) {
-      traits.push('action.devices.traits.EnergyStorage');
-      attributes['queryOnlyEnergyStorage'] = true;
-    }
 
     return this.createSyncData(service, {
       type: 'action.devices.types.SENSOR',
-      traits,
-      attributes,
+      traits: ['action.devices.traits.EnergyStorage'],
+      attributes: {
+        queryOnlyEnergyStorage: true,
+      },
     });
   }
 
   query(service: ServiceType) {
     const response = {
       online: true,
-      temperatureSetpointCelsius: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature)?.value,
-      temperatureAmbientCelsius: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature)?.value,
     } as any;
 
-    // check if the sensor has the humidity characteristic
-    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentRelativeHumidity)) {
-      response['humidityAmbientPercent'] = service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentRelativeHumidity)?.value;
-    }
-    
     // check if the sensor has the StatusLowBattery characteristic
     const lowBattery = service.serviceCharacteristics.find(x => x.uuid === Characteristic.StatusLowBattery)?.value as number;
     if (lowBattery !== undefined) {
@@ -73,7 +42,6 @@ export class TemperatureSensor extends ghToHap implements ghToHap_t {
         unit: 'PERCENTAGE',
       }];
     }
-    //console.log(response);
 
     return response;
   }
