@@ -255,7 +255,7 @@ export class Television extends ghToHap implements ghToHap_t {
           const number = parseInt(command.execution[0].params.channelNumber) - 1;
           const c = instance.channels.find(x => x.Identifier === number);
           if (c) {
-            await service.serviceCharacteristics.find(x => x.type === Characteristic.ActiveIdentifier).setValue(c.Identifier);
+            await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).setValue(c.Identifier);
             instance.lastChannel = c.Identifier;
             return { ids: [service.uniqueId], status: 'SUCCESS' };
           }
