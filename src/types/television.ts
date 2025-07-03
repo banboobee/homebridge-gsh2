@@ -269,7 +269,8 @@ export class Television extends ghToHap implements ghToHap_t {
         }
         const change = command.execution[0].params?.relativeChannelChange;
         const n = instance.channels.length;
-        let c = instance.channels.findIndex(x => x.Identifier === instance.lastChannel) ?? n - 1;
+        let c = instance.channels.findIndex(x => x.Identifier === instance.lastChannel);
+        c = c < 0 ? n - 1 : c;
         // const d = service.serviceCharacteristics.find(x => x.uuid === Characteristic.serviceName).value;
         // console.log(`Current channel index of ${d} is ${c}.`);
         if (change > 0) {
