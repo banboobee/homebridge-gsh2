@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
 import { Hap } from '../hap';
@@ -44,6 +46,9 @@ export class Television extends ghToHap implements ghToHap_t {
     instance.channels = [];
     instance.inputs = [];
     for (const input of x.filter(x => x.uuid === Service.InputSource)) {    // service.linked is better?
+      if (input.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentVisibilityState)?.value) {
+        continue;       // hidden input source
+      }
       const cname = input.serviceCharacteristics.find(x => x.uuid === Characteristic.ConfiguredName)?.value as string;
       const c = {
         serviceName: input.serviceName,
@@ -58,6 +63,7 @@ export class Television extends ghToHap implements ghToHap_t {
         instance.inputs.push(c);
       }
     }
+    instance.lastChannel = instance.channels[0]?.Identifier;    // need to keep between syncing?
     // console.log(`${service.type}: ${service.instance.username}, aid:${service.aid}, iid:${service.iid}, name: ${service.serviceName}`);
     // console.log(`channels: ${JSON.stringify(this.instances[service.uniqueId].channels, null, 2)}`);
     // console.log(`inputs: ${JSON.stringify(this.instances[service.uniqueId].inputs, null, 2)}`);
@@ -71,10 +77,10 @@ export class Television extends ghToHap implements ghToHap_t {
       'action.devices.traits.TransportControl',
     ];
     const attributes = {
-      commandOnlyOnOff: false,	//OnOff
+      commandOnlyOnOff: false,  //OnOff
       queryOnlyOnOff: false,
-      supportActivityState: false, //MediaState
-      supportPlaybackState: false,
+      supportActivityState: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentMediaState) ? true : false,
+      supportPlaybackState: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentMediaState) ? true : false,
     } as any;
     attributes.availableApplications = [];
     attributes.transportControlSupportedCommands = [];
@@ -90,12 +96,12 @@ export class Television extends ghToHap implements ghToHap_t {
     if (instance.volumeSelector.find(x => x.uuid === Characteristic.VolumeSelector)) {
       traits.push('action.devices.traits.Volume');
       attributes.volumeCanMuteAndUnmute = instance.Mute.find(x => x.uuid === Characteristic.Mute) ? true : false;
-      attributes.volumeMaxLevel = 20;	//Volume. Just in case for a relative operations
+      attributes.volumeMaxLevel = 20;   //Volume. Just in case for a relative operations
       attributes.commandOnlyVolume = true;
     }
     if (instance.channels.length > 0) {
       traits.push('action.devices.traits.Channel');
-      attributes.commandOnlyChannels = true;
+      attributes.commandOnlyChannels = false;
       attributes.availableChannels = [];
       for (const c of instance.channels) {
         const n = [c.ConfiguredName];
@@ -116,17 +122,20 @@ export class Television extends ghToHap implements ghToHap_t {
       traits.push('action.devices.traits.InputSelector');
       attributes.commandOnlyInputSelector = false;
       attributes.orderedInputs = true;
-      attributes.availableInputs = [{
-        key: '_tv',	//dummy for stations
-        names: [
-          {
-            lang: 'en',
-            name_synonym: [
-              '_tv',
-            ],
-          },
-        ],
-      }];
+      attributes.availableInputs = [];
+      if (attributes.availableChannels?.length > 0) {
+        attributes.availableInputs.push({
+          key: '_tv',   //dummy for stations
+          names: [
+            {
+              lang: 'en',
+              name_synonym: [
+                '_tv',
+              ],
+            },
+          ],
+        });
+      }
       for (const c of instance.inputs) {
         attributes.availableInputs.push({
           key: c.serviceName,
@@ -167,10 +176,37 @@ export class Television extends ghToHap implements ghToHap_t {
     }
     const cActive = service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier);
     if (cActive) {
-      response.currentInput = '_tv';
-      const i = instance.channels.find(x => x.Identifier === cActive.value);
-      if (i) {
-        response.currentInput = i.serviceName;
+      const lastChannel = instance.channels.find(x => x.Identifier === cActive.value);
+      if (lastChannel) {
+        instance.lastChannel = lastChannel.Identifier;
+      }
+      if (instance.inputs.length > 0) {
+        response.currentInput = instance.inputs.find(x => x.Identifier === cActive.value)?.serviceName ?? '_tv';
+      }
+    }
+    const cState = service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentMediaState);
+    if (cState) {
+      // public static readonly PLAY = 0;
+      // public static readonly PAUSE = 1;
+      // public static readonly STOP = 2;
+      // public static readonly LOADING = 4;
+      // public static readonly INTERRUPTED = 5;
+      response.activityState = response.on ? 'STANDBY' : 'INACTIVE';
+      switch (cState.value) {
+        case 0:
+          response.playbackState = 'PLAYING';
+          break;
+        case 1:
+          response.playbackState = 'PAUSED';
+          break;
+        case 2:
+          response.playbackState = 'STOPPED';
+          break;
+        case 4:
+        case 5:
+        default:
+          response.playbackState = 'BUFFERING';
+          break;
       }
     }
     // console.log(service.serviceName, response);
@@ -198,7 +234,7 @@ export class Television extends ghToHap implements ghToHap_t {
         await instance.Mute.find(x => x.uuid === Characteristic.Mute).setValue(command.execution[0].params.mute ? 1 : 0);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
-      // case ('action.devices.commands.setVolume'): {	// No proper characteristic
+      // case ('action.devices.commands.setVolume'): {  // No proper characteristic
       // }
       case ('action.devices.commands.volumeRelative'): {
         // Characteristic.VolumeSelector.INCREMENT = 0;
@@ -207,29 +243,34 @@ export class Television extends ghToHap implements ghToHap_t {
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.selectChannel'): {
-
         if (command.execution[0].params?.channelCode) {
           const code = command.execution[0].params.channelCode;
           const c = instance.channels.find(x => x.serviceName === code);
           if (c) {
             await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).setValue(c.Identifier);
+            instance.lastChannel = c.Identifier;
             return { ids: [service.uniqueId], status: 'SUCCESS' };
           }
         } else if (command.execution[0].params?.channelNumber) {
           const number = parseInt(command.execution[0].params.channelNumber) - 1;
           const c = instance.channels.find(x => x.Identifier === number);
           if (c) {
-            await service.serviceCharacteristics.find(x => x.type === Characteristic.ActiveIdentifier).setValue(c.Identifier);
+            await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).setValue(c.Identifier);
+            instance.lastChannel = c.Identifier;
             return { ids: [service.uniqueId], status: 'SUCCESS' };
           }
           //} else if (command.execution[0].params?.channelName) {
         }
-        break;
+        return { ids: [service.uniqueId], status: 'ERROR', 'errorCode': 'channelSwitchFailed', debugString: `unknown command ${command.execution[0].command}` };
       }
       case ('action.devices.commands.relativeChannel'): {
+        if (!instance.lastChannel) {    // no channels available
+          return { ids: [service.uniqueId], status: 'ERROR', 'errorCode': 'channelSwitchFailed', debugString: `unknown command ${command.execution[0].command}` };
+        }
         const change = command.execution[0].params?.relativeChannelChange;
         const n = instance.channels.length;
-        let c = instance.lastChannel !== undefined ? instance.channels.findIndex(x => x.Identifier === instance.lastChannel) : n - 1;
+        let c = instance.channels.findIndex(x => x.Identifier === instance.lastChannel);
+        c = c < 0 ? n - 1 : c;
         // const d = service.serviceCharacteristics.find(x => x.uuid === Characteristic.serviceName).value;
         // console.log(`Current channel index of ${d} is ${c}.`);
         if (change > 0) {
@@ -248,20 +289,28 @@ export class Television extends ghToHap implements ghToHap_t {
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.returnChannel'): {
-        let c = service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).value;
-        c = instance.lastChannel !== undefined ? instance.lastChannel : instance.channels[0]?.Identifier;
-        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).setValue(c);
-        instance.lastChannel = c;
+        if (!instance.lastChannel) {    // no channels available
+          return { ids: [service.uniqueId], status: 'ERROR', 'errorCode': 'channelSwitchFailed', debugString: `unknown command ${command.execution[0].command}` };
+        }
+        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).setValue(instance.lastChannel);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.SetInput'): {
         const input = command.execution[0].params?.newInput;
+        if (input === '_tv') {          // might be selected in UI
+          if (!instance.lastChannel) {  // won't happen. just in case.
+            return { ids: [service.uniqueId], status: 'ERROR', 'errorCode': 'unsupportedInput', debugString: `unknown command ${command.execution[0].command}` };
+          } else {
+            await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).setValue(instance.lastChannel);
+            return { ids: [service.uniqueId], status: 'SUCCESS' };
+          }
+        }
         const c = instance.inputs.find(x => x.serviceName === input);
         if (c) {
           await service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).setValue(parseInt(c.Identifier));
           return { ids: [service.uniqueId], status: 'SUCCESS', states: { currentInput: c.serviceName } };
         }
-        break;
+        return { ids: [service.uniqueId], status: 'ERROR', 'errorCode': 'unsupportedInput', debugString: `unknown command ${command.execution[0].command}` };
       }
       case ('action.devices.commands.NextInput'): {
         let c = service.serviceCharacteristics.find(x => x.uuid === Characteristic.ActiveIdentifier).value as number;
@@ -325,7 +374,11 @@ export class Television extends ghToHap implements ghToHap_t {
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.mediaNext'): {
-        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.RemoteKey).setValue(7); // Characteristic.RemoteKey.ARROW_RIGHT,
+        if (this.hap.config.enhancedSkip === true && service.accessoryInformation.Manufacturer === 'Apple Inc.') {
+          await service.serviceCharacteristics.find(x => x.uuid === Characteristic.RemoteKey).setValue(8); // Characteristic.RemoteKey.SELECT,
+        } else {
+          await service.serviceCharacteristics.find(x => x.uuid === Characteristic.RemoteKey).setValue(7); // Characteristic.RemoteKey.ARROW_RIGHT,
+        }
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.mediaPrevious'): {
