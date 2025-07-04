@@ -25,7 +25,7 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
 
     const traits = [
       'action.devices.traits.TemperatureSetting',
-      'action.devices.traits.OnOff',
+      // 'action.devices.traits.OnOff',
     ];
 
     const attributes: any = {
@@ -33,8 +33,8 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
       thermostatTemperatureUnit: this.hap.config.forceFahrenheit
         ? 'F'
         : service.serviceCharacteristics.find(x => x.uuid === Characteristic.TemperatureDisplayUnits)?.value ? 'F' : 'C',
-      commandOnlyOnOff: false,
-      queryOnlyOnOff: false,
+      // commandOnlyOnOff: false,
+      // queryOnlyOnOff: false,
     };
 
     const type = this.hap.config.showHeaterCoolerAsACUnit ? 'action.devices.types.AC_UNIT' : 'action.devices.types.THERMOSTAT';
@@ -58,7 +58,7 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
 
     const response = {
       online: true,
-      on: !!activeState,
+      // on: !!activeState,
       thermostatMode,
       activeThermostatMode: thermostatMode,
       thermostatTemperatureAmbient: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature).value,
@@ -129,11 +129,11 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
         await service.serviceCharacteristics.find(x => x.uuid === Characteristic.RotationSpeed).setValue(command.execution[0].params.fanSpeedPercent);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
-      case ('action.devices.commands.OnOff'): {
+      // case ('action.devices.commands.OnOff'): {
 
-        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).setValue(command.execution[0].params.on ? 1 : 0);
-        return { ids: [service.uniqueId], status: 'SUCCESS' };
-      }
+      //   await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).setValue(command.execution[0].params.on ? 1 : 0);
+      //   return { ids: [service.uniqueId], status: 'SUCCESS' };
+      // }
       default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }
     }
   }
