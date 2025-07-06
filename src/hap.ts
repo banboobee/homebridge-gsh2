@@ -27,6 +27,7 @@ import { OccupancySensor } from './types/occupancy-sensor';
 import { ContactSensor } from './types/contact-sensor';
 import { TemperatureSensor } from './types/temperature-sensor';
 import { Battery } from './types/battery-status';
+import { Sensor } from './types/sensors';
 import { Thermostat } from './types/thermostat';
 import { Window } from './types/window';
 import { WindowCovering } from './types/window-covering';
@@ -51,29 +52,7 @@ export class Hap {
   private dummy = () => {};
   
   /* GSH Supported types */
-  types = {
-    Door: new Door(),
-    Fan: new Fan(),
-    Fanv2: new Fanv2(),
-    GarageDoorOpener: new GarageDoorOpener(),
-    HeaterCooler: new HeaterCooler(this),
-    HumiditySensor: new HumiditySensor(),
-    Lightbulb: new Lightbulb(),
-    LockMechanism: new LockMechanism(),
-    Outlet: new Switch('action.devices.types.OUTLET'),
-    SecuritySystem: new SecuritySystem(),
-    Switch: new Switch('action.devices.types.SWITCH'),
-    Television: new Television(this),
-    TemperatureSensor: new TemperatureSensor(this),
-    Thermostat: new Thermostat(this),
-    Window: new Window(),
-    WindowCovering: new WindowCovering(),
-    Speaker: this.dummy,
-    InputSource: this.dummy,
-    OccupancySensor: new OccupancySensor(),
-    ContactSensor: new ContactSensor(),
-    Battery: new Battery(),
-  };
+  private types = {};
 
   /* event tracking */
   // evInstances: Instance[] = [];
@@ -129,6 +108,32 @@ export class Hap {
     this.accessoryFilterInverse = config.accessoryFilterInverse || false;
     this.accessorySerialFilter = config.accessorySerialFilter || [];
     config.instanceBlacklist = config.instanceDenylist || [];
+
+    /* GSH Supported types */
+    const sensors = new Sensor(this);
+    this.types = {
+      Door: new Door(),
+      Fan: new Fan(),
+      Fanv2: new Fanv2(),
+      GarageDoorOpener: new GarageDoorOpener(),
+      HeaterCooler: new HeaterCooler(this),
+      HumiditySensor: config.mergeSensorDevices ? sensors : new HumiditySensor(),
+      Lightbulb: new Lightbulb(),
+      LockMechanism: new LockMechanism(),
+      Outlet: new Switch('action.devices.types.OUTLET'),
+      SecuritySystem: new SecuritySystem(),
+      Switch: new Switch('action.devices.types.SWITCH'),
+      Television: new Television(this),
+      TemperatureSensor: config.mergeSensorDevices ? sensors : new TemperatureSensor(this),
+      Thermostat: new Thermostat(this),
+      Window: new Window(),
+      WindowCovering: new WindowCovering(),
+      Speaker: this.dummy,
+      InputSource: this.dummy,
+      OccupancySensor: config.mergeSensorDevices ? sensors : new OccupancySensor(),
+      ContactSensor: config.mergeSensorDevices ? sensors : new ContactSensor(),
+      Battery: config.mergeSensorDevices ? sensors : new Battery(),
+    };
 
     // eslint-disable-next-line max-len
     this.log.debug(`Waiting ${this.configDiscoveryWait} seconds before starting instance discovery, and ${this.configDiscoveryTimeout} seconds after last device is discovered to publish to Google.`);
@@ -214,14 +219,12 @@ export class Hap {
   async buildSyncResponse(): Promise<SmartHomeV1SyncDevices[]> {
     const devices = this.services.filter((service) =>
       this.types?.[service.type]?.sync,
-    ).map((service) => {
-      // if (!this.types[service.type]) {
-      //   // this.log.debug(`Unsupported service type ${service.type}`);
-      //   return;
-      // }
-      // // console.log('buildSyncResponse', service);
-      return this.types[service.type].sync(service);
-    });
+    ).reduce((response, service) => {
+      const sync = this.types[service.type].sync(service);
+      return sync ? [...response, sync] : response;
+    }, []);
+    // console.log(devices);
+    // console.log(devices.length);
 
     const latestSync: Record<string, any> = this.plugin.platform.accessory.context.latestSync;
     // console.log(`caching ${Object.keys(latestSync).length} devices.`);
@@ -264,7 +267,8 @@ export class Hap {
       const service = this.services.find(x => x.uniqueId === device.id);
       if (service) {
         await this.getStatus(service);
-        response[device.id] = this.types[service.type].query(service);
+        const query = await this.types[service.type].query(service);
+        response[device.id] = query ? query : {};
       } else {
         response[device.id] = {};
       }
@@ -417,10 +421,10 @@ export class Hap {
         }
       }
       for (const x of Object.keys(latestSync)) {
-        if (!latestSync[x]?.unavailable) {	// consistent or wrong record
+        if (!latestSync[x]?.unavailable) {      // consistent or wrong record
           continue;
         }
-        const response = latestSync[x]?.sync;	// inconsistent records
+        const response = latestSync[x]?.sync;   // inconsistent records
         const name = response?.name.name;
         const aid = response?.customData.aid;
         const iid = response?.customData.iid;
@@ -473,7 +477,10 @@ export class Hap {
       if (!this.types?.[service.type]?.query) {
         continue;
       }
-      states[service.uniqueId] = this.types[service.type].query(service);
+      const query = await this.types[service.type].query(service);
+      if (query) {
+        states[service.uniqueId] = query;
+      }
     }
 
     return await this.sendStateReport(states);
@@ -486,14 +493,14 @@ export class Hap {
     if (!this.services.length) {
       return;
     }
-    this.services.filter((service) => 
+    await Promise.all(this.services.filter((service) => 
       this.types?.[service.type]?.query,
-    ).map((service) => {
-      // if (!this.types[service.type]) {
-      //   return;
-      // }
-      return states[service.uniqueId] = this.types[service.type].query(service);
-    });
+    ).map(async (service) => {
+      const query = await this.types[service.type].query(service);
+      if (query) {
+        states[service.uniqueId] = query;
+      }
+    }));
     return await this.sendStateReport(states);
   }
 
