@@ -17,7 +17,6 @@ export class Sensor extends ghToHap implements ghToHap_t {
   sync(service: ServiceType): SmartHomeV1SyncDevices | undefined {
     const traits = [];
     const attributes = {};
-    const instances = [];
 
     if (!this.instances[service.uniqueId] && !this.voidInstances[service.uniqueId]) {
       const services = this.hap.services.filter(x => x.aid === service.aid && x.instance.username === service.instance.username) ?? [];
@@ -39,7 +38,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
             if (representative === x.uniqueId) {
               this.instances[x.uniqueId] = p;
             } else {
-              this.voidInstances[x.uniqueId] = this.instances[representative];
+              this.voidInstances[x.uniqueId] = representative;
             }
             p[characteristic] = {
               service: x,
@@ -101,43 +100,42 @@ export class Sensor extends ghToHap implements ghToHap_t {
     });
   }
 
-  async query(service: ServiceType) {
-    const instance = this.instances[service.uniqueId];
+  query(service: ServiceType, representative: string[] = undefined) {
+    let instance = this.instances[service.uniqueId];
     if (!instance) {
-      // console.log(`${service.serviceName}\n${service.uniqueId} undefined`);
-      return undefined;
+      if (representative) {
+	const p = this.voidInstances[service.uniqueId];
+	instance = this.instances[p];
+	representative[0] = p;
+      } else {
+	return undefined;
+      }
     }
-    // const instance = this.instances[service.uniqueId] || this.voidInstances[service.uniqueId] ;
     const response = {
       online: true,
     } as any;
 
     // check if the device reports CurrentTemperature
     if (instance?.[Characteristic.CurrentTemperature]) {
-      await instance[Characteristic.CurrentTemperature].service.refreshCharacteristics();
       response['temperatureAmbientCelsius'] = instance[Characteristic.CurrentTemperature].characteristic?.value;
     }
 
     // check if the device reports CurrentRelativeHumidity
     if (instance?.[Characteristic.CurrentRelativeHumidity]) {
-      await instance[Characteristic.CurrentRelativeHumidity].service.refreshCharacteristics();
       response['humidityAmbientPercent'] = instance[Characteristic.CurrentRelativeHumidity].characteristic?.value;
     }
     
     // check if the device reports OccupancyDetected
     if (instance?.[Characteristic.OccupancyDetected]) {
-      await instance[Characteristic.OccupancyDetected].service.refreshCharacteristics();
       response['occupancy'] = instance[Characteristic.OccupancyDetected].characteristic?.value ? 'OCCUPIED': 'UNOCCUPIED';
     }
     
     // check if the device reports ContactSensorState
     if (instance?.[Characteristic.ContactSensorState]) {
-      await instance[Characteristic.ContactSensorState].service.refreshCharacteristics();
       response['openPercent'] = instance[Characteristic.ContactSensorState].characteristic?.value ? 100: 0;
     }
     
     // check if the device reports BatteryLevel or StatusLowBattery
-    await instance?.[Characteristic.StatusLowBattery]?.service.refreshCharacteristics();
     const lowBattery = instance?.[Characteristic.StatusLowBattery]?.characteristic?.value as number;
     if (instance?.[Characteristic.StatusLowBattery]) {
       if (lowBattery !== undefined) {
@@ -145,7 +143,6 @@ export class Sensor extends ghToHap implements ghToHap_t {
       }
     }
     if (instance?.[Characteristic.BatteryLevel]) {
-      await instance[Characteristic.BatteryLevel].service.refreshCharacteristics();
       const descriptions = ['CRITICALLY_LOW', 'CRITICALLY_LOW', 'LOW', 'MEDIUM', 'HIGH', 'FULL', 'FULL'];
       const thresholds = [0, 10, 20, 40, 80, 90, 100];
       const current = instance[Characteristic.BatteryLevel].characteristic?.value as number;

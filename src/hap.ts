@@ -267,7 +267,7 @@ export class Hap {
       const service = this.services.find(x => x.uniqueId === device.id);
       if (service) {
         await this.getStatus(service);
-        const query = await this.types[service.type].query(service);
+        const query = this.types[service.type].query(service);
         response[device.id] = query ? query : {};
       } else {
         response[device.id] = {};
@@ -287,7 +287,7 @@ export class Hap {
     for (const command of commands) {
       for (const device of command.devices) {
         const service = this.services.find(x => x.uniqueId === device.id);
-        this.log.debug(`Processing command ${command.execution[0].command} for ${device.id} and ${service.serviceName}`);
+        this.log.debug(`Processing command ${command.execution[0].command} for ${device.id} and ${service?.serviceName}`);
         if (service) {
           // check if two factor auth is required, and if we have it
           if (this.config.twoFactorAuthPin && this.types[service.type].twoFactorRequired
@@ -421,10 +421,10 @@ export class Hap {
         }
       }
       for (const x of Object.keys(latestSync)) {
-        if (!latestSync[x]?.unavailable) {      // consistent or wrong record
+        if (!latestSync[x]?.unavailable) {	// consistent or wrong record
           continue;
         }
-        const response = latestSync[x]?.sync;   // inconsistent records
+        const response = latestSync[x]?.sync;	// inconsistent records
         const name = response?.name.name;
         const aid = response?.customData.aid;
         const iid = response?.customData.iid;
@@ -477,9 +477,11 @@ export class Hap {
       if (!this.types?.[service.type]?.query) {
         continue;
       }
-      const query = await this.types[service.type].query(service);
+      const representative = [];
+      const query = this.types[service.type].query(service, representative);
       if (query) {
-        states[service.uniqueId] = query;
+	const id = representative[0] ?? service.uniqueId;
+        states[id] = query;
       }
     }
 
@@ -493,14 +495,14 @@ export class Hap {
     if (!this.services.length) {
       return;
     }
-    await Promise.all(this.services.filter((service) => 
+    this.services.filter((service) => 
       this.types?.[service.type]?.query,
-    ).map(async (service) => {
-      const query = await this.types[service.type].query(service);
+    ).map((service) => {
+      const query = this.types[service.type].query(service);
       if (query) {
         states[service.uniqueId] = query;
       }
-    }));
+    });
     return await this.sendStateReport(states);
   }
 
