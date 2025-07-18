@@ -232,10 +232,20 @@ export class Hap {
       latestSync[x.id].sync = x;
     }
     for (const x of Object.values(latestSync)) {
-      if (x.unavailable && x.sync) {    // keep as zombie device
+      if (!x.unavailable && !devices.find(y => x.sync.id === y.id)) {
+        if (x.sync.traits) {    // disables pre-merged/unmerged sensors.
+          x.sync._traits = x.sync.traits;
+          delete x.sync.traits;
+          // console.log(x);
+        }
+      }
+      if (x.unavailable && x.sync?.traits) {    // keep as zombie device
         devices.push(x.sync);
+        // console.log(x);
       }
     }
+    // console.log(devices);
+    // console.log(devices.length);
     
     return devices;
   }
@@ -412,8 +422,18 @@ export class Hap {
         }
         if (!latestSync[x.uniqueId]) {          // new device
           this.log.debug(`Found new accessory '${x.serviceName}'. aid:${x.aid}, iid:${x.iid}, username:${x.instance.username}`);
-          latestSync[x.uniqueId] = {
-            sync: undefined,
+          latestSync[x.uniqueId] = {		// save original for future removal
+            sync: {
+              id: x.uniqueId,
+              name: {
+                name: x.serviceName,
+              },
+              customData: {
+                aid: x.aid,
+                iid: x.iid,
+                instanceUsername: x.instance.username,
+              },
+            },
             unavailable: 0,
           };
         } else {                                // consistent device
@@ -480,7 +500,7 @@ export class Hap {
       const representative = [];
       const query = this.types[service.type].query(service, representative);
       if (query) {
-	const id = representative[0] ?? service.uniqueId;
+        const id = representative[0] ?? service.uniqueId;
         states[id] = query;
       }
     }

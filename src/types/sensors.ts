@@ -104,11 +104,11 @@ export class Sensor extends ghToHap implements ghToHap_t {
     let instance = this.instances[service.uniqueId];
     if (!instance) {
       if (representative) {
-	const p = this.voidInstances[service.uniqueId];
-	instance = this.instances[p];
-	representative[0] = p;
+        const p = this.voidInstances[service.uniqueId];
+        instance = this.instances[p];
+        representative[0] = p;
       } else {
-	return undefined;
+        return undefined;
       }
     }
     const response = {
