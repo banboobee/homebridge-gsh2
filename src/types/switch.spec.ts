@@ -15,6 +15,16 @@ describe('switch', () => {
       expect(response.attributes).not.toBeDefined();
       // await sleep(10000)
     });
+    it('switch with Brightness', async () => {
+      const response: any = switchDevice.sync(switchDeviceServiceHue);
+      expect(response).toBeDefined();
+      expect(response.type).toBe('action.devices.types.SWITCH');
+      expect(response.traits).toContain('action.devices.traits.OnOff');
+      expect(response.traits).toContain('action.devices.traits.Brightness');
+      expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
+      expect(response.attributes).not.toBeDefined();
+      // await sleep(10000)
+    });
   });
   describe('query message', () => {
     it('switch with On/Off only', async () => {
@@ -24,11 +34,27 @@ describe('switch', () => {
       expect(response.online).toBeDefined();
       // await sleep(10000)
     });
+    it('switch with Brightness', async () => {
+      const response = switchDevice.query(switchDeviceServiceHue);
+      expect(response).toBeDefined();
+      expect(response.on).toBeDefined();
+      expect(response.brightness).toBeDefined();
+      expect(response.online).toBeDefined();
+      // await sleep(10000)
+    });
   });
 
   describe('execute message', () => {
     it('switch with On/Off only', async () => {
       const response = await switchDevice.execute(switchDeviceServiceOnOff, commandOnOff);
+      expect(response).toBeDefined();
+      expect(response.ids).toBeDefined();
+      expect(response.status).toBe('SUCCESS');
+      // await sleep(10000)
+    });
+
+    it('switch with Brightness', async () => {
+      const response = await switchDevice.execute(switchDeviceServiceHue, commandBrightness);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('SUCCESS');
@@ -602,12 +628,20 @@ const commandBrightness = {
   ],
   execution: [
     {
-      command: 'action.devices.commands.OnOff',
+      command: 'action.devices.commands.BrightnessAbsolute',
       params: {
-        on: true,
+        brightness: 1,
       },
     },
   ],
+  // execution: [
+  //   {
+  //     command: 'action.devices.commands.OnOff',
+  //     params: {
+  //       on: true,
+  //     },
+  //   },
+  // ],
 };
 
 const commandColorHSV = {
