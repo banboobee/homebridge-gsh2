@@ -87,6 +87,7 @@ export class Hap {
     Characteristic.OccupancyDetected,
     Characteristic.ContactSensorState,
     Characteristic.CurrentMediaState,
+    Characteristic.MotionDetected,
   ];
 
   accessoryFilter: Array<string> = [];
