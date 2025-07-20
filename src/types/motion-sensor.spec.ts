@@ -69,8 +69,8 @@ const motionSensorTemp: ServiceType = {
     {
       aid: 23,
       iid: 15,
-      uuid: "00000022-0000-1000-8000-0026BB765291",
-      type: "MotionDetected",
+      uuid: '00000022-0000-1000-8000-0026BB765291',
+      type: 'MotionDetected',
       serviceType: 'MotionSensor',
       serviceName: '',
       description: 'Motion Detected',
