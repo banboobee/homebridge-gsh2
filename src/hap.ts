@@ -25,6 +25,7 @@ import { Switch } from './types/switch';
 import { Television } from './types/television';
 import { OccupancySensor } from './types/occupancy-sensor';
 import { ContactSensor } from './types/contact-sensor';
+import { MotionSensor } from './types/motion-sensor';
 import { TemperatureSensor } from './types/temperature-sensor';
 import { Battery } from './types/battery-status';
 import { Sensor } from './types/sensors';
@@ -132,6 +133,7 @@ export class Hap {
       InputSource: this.dummy,
       OccupancySensor: config.mergeSensorDevices ? sensors : new OccupancySensor(),
       ContactSensor: config.mergeSensorDevices ? sensors : new ContactSensor(),
+      MotionSensor: config.mergeSensorDevices ? sensors : new MotionSensor(),
       Battery: config.mergeSensorDevices ? sensors : new Battery(),
     };
 

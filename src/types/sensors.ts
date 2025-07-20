@@ -25,6 +25,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
         Characteristic.CurrentRelativeHumidity,
         Characteristic.OccupancyDetected,
         Characteristic.ContactSensorState,
+        Characteristic.MotionDetected,
         Characteristic.StatusLowBattery,
         Characteristic.BatteryLevel,
       ];
@@ -78,6 +79,14 @@ export class Sensor extends ghToHap implements ghToHap_t {
       }];
     }
 
+    // check if the device reports MotionDetected
+    if (instance[Characteristic.MotionDetected]) {
+      traits.push('action.devices.traits.OccupancySensing');
+      attributes['occupancySensorConfiguration'] = [{
+        occupancySensorType: 'PHYSICAL_CONTACT',
+      }];
+    }
+
     // check if the device reports ContactSensorState
     if (instance[Characteristic.ContactSensorState]) {
       traits.push('action.devices.traits.OpenClose');
@@ -128,6 +137,11 @@ export class Sensor extends ghToHap implements ghToHap_t {
     // check if the device reports OccupancyDetected
     if (instance?.[Characteristic.OccupancyDetected]) {
       response['occupancy'] = instance[Characteristic.OccupancyDetected].characteristic?.value ? 'OCCUPIED': 'UNOCCUPIED';
+    }
+    
+    // check if the device reports MotionDetected
+    if (instance?.[Characteristic.MotionDetected]) {
+      response['occupancy'] = instance[Characteristic.MotionDetected].characteristic?.value ? 'OCCUPIED': 'UNOCCUPIED';
     }
     
     // check if the device reports ContactSensorState
