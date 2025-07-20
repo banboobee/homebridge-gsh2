@@ -30,8 +30,8 @@ export class Sensor extends ghToHap implements ghToHap_t {
       ];
       let representative = undefined;
       const p = {};
-      for (const x of services) {
-        for (const characteristic of characteristics) {
+      for (const characteristic of characteristics) {
+	for (const x of services) {
           const c = x.serviceCharacteristics.find(x => x.uuid === characteristic);
           if (c) {
             representative ??= x.uniqueId;
