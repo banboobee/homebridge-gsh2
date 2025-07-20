@@ -32,9 +32,14 @@ const config: PluginConfig = {
   twoFactorAuthPin: '123-456',
 };
 
-const log = new Log(console, true);
+const pluginMock = new class {
+  log: Log;
+  constructor() {
+    this.log = new Log(console, true);
+  }
+}
 
-const hap = new Hap(socketMock, log, '031-45-154', config, {});
+const hap = new Hap(socketMock, pluginMock, '031-45-154', config, {});
 
 const thermostat = new Thermostat(hap);
 
