@@ -24,7 +24,7 @@ export class WindowCovering extends ghToHap implements ghToHap_t {
       const sensors = this.hap.sensors.sync(service);
       traits = [...traits, ...sensors.traits];
       attributes = {...attributes, ...sensors.attributes};
-      console.log(service.serviceName, traits, attributes);
+      // console.log(service.serviceName, traits, attributes);
     }
 
     return this.createSyncData(service, {
@@ -43,7 +43,7 @@ export class WindowCovering extends ghToHap implements ghToHap_t {
     if (this.hap.config.mergeSensorDevices) {
       const sensors = this.hap.sensors.query(service);
       response = {...response, ...sensors};
-      console.log(service.serviceName, response);
+      // console.log(service.serviceName, response);
     }
 
     return response;

@@ -37,7 +37,7 @@ const pluginMock = new class {
   constructor() {
     this.log = new Log(console, true);
   }
-}
+};
 
 const hap = new Hap(socketMock, pluginMock, '031-45-154', config, {});
 
