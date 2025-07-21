@@ -53,7 +53,11 @@ export class Switch extends ghToHap implements ghToHap_t {
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       case ('action.devices.commands.BrightnessAbsolute'): {
-        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness).setValue(command.execution[0].params.brightness);
+        const brightnessCharacteristic = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness);
+        if (!brightnessCharacteristic) {
+          return { ids: [service.uniqueId], status: 'ERROR', debugString: 'Brightness characteristic not found' };
+        }
+        await brightnessCharacteristic.setValue(command.execution[0].params.brightness);
         return { ids: [service.uniqueId], status: 'SUCCESS' };
       }
       default: { return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` }; }
