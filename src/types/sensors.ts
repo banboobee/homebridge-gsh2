@@ -21,6 +21,9 @@ export class Sensor extends ghToHap implements ghToHap_t {
     if (!this.instances[service.uniqueId] && !this.voidInstances[service.uniqueId]) {
       const services = this.hap.services.filter(x => x.aid === service.aid && x.instance.username === service.instance.username) ?? [];
       const characteristics = [
+        Characteristic.CurrentPosition,
+        Characteristic.LockCurrentState,
+        Characteristic.On,
         Characteristic.CurrentTemperature,
         Characteristic.CurrentRelativeHumidity,
         Characteristic.OccupancyDetected,
@@ -35,6 +38,11 @@ export class Sensor extends ghToHap implements ghToHap_t {
         for (const x of services) {
           const c = x.serviceCharacteristics.find(x => x.uuid === characteristic);
           if (c) {
+            if (characteristic === Characteristic.ContactSensorState &&
+                services[representative]?.uuid === Service.WindowCovering) {
+              this.hap.log.error(`Unable to merger devices due to conflicting traits. ${x.serviceName}`);
+              continue;
+            }
             representative ??= x.uniqueId;
             if (representative === x.uniqueId) {
               this.instances[x.uniqueId] = p;
@@ -59,20 +67,20 @@ export class Sensor extends ghToHap implements ghToHap_t {
     const instance = this.instances[service.uniqueId];
 
     // check if the device reports CurrentTemperature
-    if (instance[Characteristic.CurrentTemperature]) {
+    if (instance?.[Characteristic.CurrentTemperature]) {
       traits.push('action.devices.traits.TemperatureControl');
       attributes['queryOnlyTemperatureControl'] = true;
       attributes['temperatureUnitForUX'] = this.hap?.config.forceFahrenheit ? 'F' : 'C';
     }
 
     // check if the device reports CurrentRelativeHumidity
-    if (instance[Characteristic.CurrentRelativeHumidity]) {
+    if (instance?.[Characteristic.CurrentRelativeHumidity]) {
       traits.push('action.devices.traits.HumiditySetting');
       attributes['queryOnlyHumiditySetting'] = true;
     }
 
     // check if the device reports OccupancyDetected
-    if (instance[Characteristic.OccupancyDetected]) {
+    if (instance?.[Characteristic.OccupancyDetected]) {
       traits.push('action.devices.traits.OccupancySensing');
       attributes['occupancySensorConfiguration'] = [{
         occupancySensorType: 'PIR',
@@ -80,7 +88,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
     }
 
     // check if the device reports MotionDetected
-    if (instance[Characteristic.MotionDetected]) {
+    if (instance?.[Characteristic.MotionDetected]) {
       traits.push('action.devices.traits.OccupancySensing');
       attributes['occupancySensorConfiguration'] = [{
         occupancySensorType: 'PHYSICAL_CONTACT',
@@ -88,7 +96,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
     }
 
     // check if the device reports ContactSensorState
-    if (instance[Characteristic.ContactSensorState]) {
+    if (instance?.[Characteristic.ContactSensorState]) {
       traits.push('action.devices.traits.OpenClose');
       attributes['discreteOnlyOpenClose'] = true;
       attributes['openDirection'] = ['LEFT', 'RIGHT'];
@@ -96,7 +104,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
     }
 
     // check if the device reports BatteryLevel or StatusLowBattery
-    if (instance[Characteristic.StatusLowBattery] || instance[Characteristic.BatteryLevel]) {
+    if (instance?.[Characteristic.StatusLowBattery] || instance?.[Characteristic.BatteryLevel]) {
       traits.push('action.devices.traits.EnergyStorage');
       attributes['queryOnlyEnergyStorage'] = true;
     }

@@ -49,6 +49,7 @@ export class Hap {
   private configDiscoveryWait: number;
 
   public ready: boolean;
+  public sensors;
 
   private dummy = () => {};
   
@@ -112,30 +113,30 @@ export class Hap {
     config.instanceBlacklist = config.instanceDenylist || [];
 
     /* GSH Supported types */
-    const sensors = new Sensor(this);
+    this.sensors = new Sensor(this);
     this.types = {
       Door: new Door(),
       Fan: new Fan(),
       Fanv2: new Fanv2(),
       GarageDoorOpener: new GarageDoorOpener(),
       HeaterCooler: new HeaterCooler(this),
-      HumiditySensor: config.mergeSensorDevices ? sensors : new HumiditySensor(),
+      HumiditySensor: config.mergeSensorDevices ? this.sensors : new HumiditySensor(),
       Lightbulb: new Lightbulb(),
-      LockMechanism: new LockMechanism(),
-      Outlet: new Switch('action.devices.types.OUTLET'),
+      LockMechanism: new LockMechanism(this),
+      Outlet: new Switch(this),
       SecuritySystem: new SecuritySystem(),
-      Switch: new Switch('action.devices.types.SWITCH'),
+      Switch: new Switch(this),
       Television: new Television(this),
-      TemperatureSensor: config.mergeSensorDevices ? sensors : new TemperatureSensor(this),
+      TemperatureSensor: config.mergeSensorDevices ? this.sensors : new TemperatureSensor(this),
       Thermostat: new Thermostat(this),
       Window: new Window(),
-      WindowCovering: new WindowCovering(),
+      WindowCovering: new WindowCovering(this),
       Speaker: this.dummy,
       InputSource: this.dummy,
-      OccupancySensor: config.mergeSensorDevices ? sensors : new OccupancySensor(),
-      ContactSensor: config.mergeSensorDevices ? sensors : new ContactSensor(),
-      MotionSensor: config.mergeSensorDevices ? sensors : new MotionSensor(),
-      Battery: config.mergeSensorDevices ? sensors : new Battery(),
+      OccupancySensor: config.mergeSensorDevices ? this.sensors : new OccupancySensor(),
+      ContactSensor: config.mergeSensorDevices ? this.sensors : new ContactSensor(),
+      MotionSensor: config.mergeSensorDevices ? this.sensors : new MotionSensor(),
+      Battery: config.mergeSensorDevices ? this.sensors : new Battery(),
     };
 
     // eslint-disable-next-line max-len

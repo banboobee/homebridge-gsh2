@@ -1,28 +1,52 @@
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
+import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
 export class WindowCovering extends ghToHap implements ghToHap_t {
+
+  constructor(
+    private hap: Hap,
+  ) {
+    super();
+  }
+
   sync(service: ServiceType) {
+    let traits = [
+      'action.devices.traits.OpenClose',
+    ];
+    let attributes = {
+      openDirection: ['UP', 'DOWN'],
+    };
+
+    if (this.hap.config.mergeSensorDevices) {
+      const sensors = this.hap.sensors.sync(service);
+      traits = [...traits, ...sensors.traits];
+      attributes = {...attributes, ...sensors.attributes};
+      console.log(service.serviceName, traits, attributes);
+    }
 
     return this.createSyncData(service, {
       type: 'action.devices.types.BLINDS',
-      traits: [
-        'action.devices.traits.OpenClose',
-      ],
-      attributes: {
-        openDirection: ['UP', 'DOWN'],
-      },
+      traits,
+      attributes,
     });
   }
 
   query(service: ServiceType) {
-    return {
+    let response = {
       on: true,
       online: true,
       openPercent: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentPosition).value,
     };
+    if (this.hap.config.mergeSensorDevices) {
+      const sensors = this.hap.sensors.query(service);
+      response = {...response, ...sensors};
+      console.log(service.serviceName, response);
+    }
+
+    return response;
   }
 
   async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {

@@ -1,22 +1,40 @@
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
+import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
 export class LockMechanism extends ghToHap implements ghToHap_t {
   public twoFactorRequired = true;
 
+  constructor(
+    private hap: Hap,
+  ) {
+    super();
+  }
+
   sync(service: ServiceType) {
+    let traits = [
+      'action.devices.traits.LockUnlock',
+    ];
+    let attributes = {};
+
+    if (this.hap.config.mergeSensorDevices) {
+      const sensors = this.hap.sensors.sync(service);
+      traits = [...traits, ...sensors.traits];
+      attributes = {...attributes, ...sensors.attributes};
+      console.log(service.serviceName, traits, attributes);
+    }
+
     return this.createSyncData(service, {
       type: 'action.devices.types.LOCK',
-      traits: [
-        'action.devices.traits.LockUnlock',
-      ],
+      traits,
+      attributes,
     });
   }
 
   query(service: ServiceType) {
-    const response = {
+    let response = {
       online: true,
     } as any;
 
@@ -43,6 +61,12 @@ export class LockMechanism extends ghToHap implements ghToHap_t {
         response.isJammed = false;
         break;
       }
+    }
+
+    if (this.hap.config.mergeSensorDevices) {
+      const sensors = this.hap.sensors.query(service);
+      response = {...response, ...sensors};
+      console.log(service.serviceName, response);
     }
 
     return response;
