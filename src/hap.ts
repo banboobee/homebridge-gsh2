@@ -24,6 +24,7 @@ import { Television } from './types/television';
 import { ContactSensor } from './types/contact-sensor';
 import { OccupancySensor } from './types/occupancy-sensor';
 import { TemperatureSensor } from './types/temperature-sensor';
+import { Battery } from './types/battery-status';
 import { Thermostat } from './types/thermostat';
 import { Window } from './types/window';
 import { WindowCovering } from './types/window-covering';
@@ -68,6 +69,7 @@ export class Hap {
     InputSource: this.dummy,
     ContactSensor: new ContactSensor(),
     OccupancySensor: new OccupancySensor(),
+    Battery: new Battery(),
   };
 
   /* event tracking */
