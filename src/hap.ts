@@ -23,6 +23,7 @@ import { Switch } from './types/switch';
 import { Television } from './types/television';
 import { ContactSensor } from './types/contact-sensor';
 import { OccupancySensor } from './types/occupancy-sensor';
+import { MotionSensor } from './types/motion-sensor';
 import { TemperatureSensor } from './types/temperature-sensor';
 import { Battery } from './types/battery-status';
 import { Thermostat } from './types/thermostat';
@@ -104,6 +105,7 @@ export class Hap {
     Characteristic.ContactSensorState,
     Characteristic.OccupancyDetected,
     Characteristic.CurrentMediaState,
+    Characteristic.MotionDetected,
   ];
 
   instanceBlacklist: Array<string> = [];
