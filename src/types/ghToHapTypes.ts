@@ -32,6 +32,6 @@ export abstract class ghToHap {
 
 export interface ghToHap_t {
   sync: (service: ServiceType) => Record<string, any>;
-  query: (service: ServiceType, representative?: string []) => Record<string, any>;
+  query: (service: ServiceType) => Record<string, any>;
   execute: (service: ServiceType, command: SmartHomeV1ExecuteRequestCommands) => Promise<SmartHomeV1ExecuteResponseCommands>;
 }

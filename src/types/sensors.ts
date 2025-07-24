@@ -117,20 +117,15 @@ export class Sensor extends ghToHap implements ghToHap_t {
     });
   }
 
-  query(service: ServiceType, representative: string[] = undefined) {
-    let instance = this.instances[service.uniqueId];
-    if (!instance) {
-      if (representative) {
-        const p = this.voidInstances[service.uniqueId];
-        instance = this.instances[p];
-        representative[0] = p;
-      } else {
-        return undefined;
-      }
-    }
+  query(service: ServiceType) {
     const response = {
       online: true,
     } as any;
+    const representative = this.voidInstances[service.uniqueId];
+    const instance = this.instances[service.uniqueId] ?? this.instances[representative];
+    if (representative) {	// slave sensor
+      response['id'] = representative;
+    }
 
     // check if the device reports CurrentTemperature
     if (instance?.[Characteristic.CurrentTemperature]) {

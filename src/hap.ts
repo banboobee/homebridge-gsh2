@@ -238,9 +238,14 @@ export class Hap {
     for (const x of Object.values(latestSync)) {
       if (!x.unavailable && !devices.find(y => x.sync.id === y.id)) {
         if (x.sync.traits) {    // disables pre-merged/unmerged sensors.
-          x.sync._traits = x.sync.traits;
-          delete x.sync.traits;
-          // console.log(x);
+	  const sync = x.sync;
+	  const {id, type, traits, ..._sync} = sync;
+	  x.sync = {
+	    id: id,
+	    type: type,
+	    _traits: traits, 
+	    ..._sync,
+	  }
         }
       }
       if (x.unavailable && x.sync?.traits) {    // keep as zombie device
@@ -281,8 +286,8 @@ export class Hap {
       const service = this.services.find(x => x.uniqueId === device.id);
       if (service) {
         await this.getStatus(service);
-        const query = this.types[service.type].query(service);
-        response[device.id] = query ? query : {};
+        const {id, ...query} = this.types[service.type].query(service);
+        response[device.id] = id ? {} : query;	// skip slave sensors, just in case.
       } else {
         response[device.id] = {};
       }
@@ -501,12 +506,9 @@ export class Hap {
       if (!this.types?.[service.type]?.query) {
         continue;
       }
-      const representative = [];
-      const query = this.types[service.type].query(service, representative);
-      if (query) {
-        const id = representative[0] ?? service.uniqueId;
-        states[id] = query;
-      }
+      const {id, ...query} = this.types[service.type].query(service);
+      states[id ?? service.uniqueId] = query;	// switch to representative if slave sensor
+      // console.log('processPendingStateReports', service.serviceName, query, id);
     }
 
     return await this.sendStateReport(states);
@@ -522,8 +524,8 @@ export class Hap {
     this.services.filter((service) => 
       this.types?.[service.type]?.query,
     ).map((service) => {
-      const query = this.types[service.type].query(service);
-      if (query) {
+      const {id, ...query} = this.types[service.type].query(service);
+      if (!id) {	// skip slave sensors
         states[service.uniqueId] = query;
       }
     });
