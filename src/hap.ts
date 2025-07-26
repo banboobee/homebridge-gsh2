@@ -48,6 +48,9 @@ export class Hap {
   private configDiscoveryTimeout: number;
   private configDiscoveryWait: number;
 
+  private cachedInstances = [];
+  private discoveredInstances = [];
+
   public ready: boolean;
   public sensors;
 
@@ -172,6 +175,16 @@ export class Hap {
       logger: this.log,
     });
 
+    this.cachedInstances =
+      Object.keys(this.plugin.platform.accessory.context.latestSync).reduce((x, y) => {
+        const sync = this.plugin.platform.accessory.context.latestSync[y]?.sync;
+        if (!x.find(instance => instance === sync?.customData?.instanceUsername)) {
+          x.push(sync?.customData.instanceUsername);
+        }
+        return x;
+      }, []);
+    // console.log(this.cachedInstances);
+    
     this.waitForNoMoreDiscoveries();
     this.hapClient.on('instance-discovered', this.waitForNoMoreDiscoveries);
 
@@ -180,20 +193,35 @@ export class Hap {
     });
   }
 
-  waitForNoMoreDiscoveries = () => {
+  waitForNoMoreDiscoveries = (instance = undefined) => {
+    if (instance) {
+      if (this.cachedInstances.find(x => instance.username === x)) {
+        this.discoveredInstances.push(instance.username);
+        // console.log(this.discoveredInstances);
+      }
+    }
+
     // Clear any existing timeout
     if (this.discoveryTimeout) {
       clearTimeout(this.discoveryTimeout);
     }
+    const missingInstanceCount = this.cachedInstances.length - this.discoveredInstances.length;
+    if (!missingInstanceCount) {
+      this.log.info(`Discovered all of ${this.cachedInstances.length} homebridge instances for cached services.`);
+    }
 
     // Set up the timeout
     this.discoveryTimeout = setTimeout(() => {
+      const missingInstanceCount = this.cachedInstances.length - this.discoveredInstances.length;
+      if (missingInstanceCount) {
+        this.log.error(`Failed to find ${missingInstanceCount} homebridge instances for cached services.`);
+      }
       this.log.debug('No more instances discovered, publishing services');
       this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
       this.start();
       this.requestSync();
       this.hapClient.on('instance-discovered', this.requestSync.bind(this));  // Request sync on new instance discovery
-    }, this.configDiscoveryTimeout * 1000);
+    }, this.configDiscoveryTimeout * (missingInstanceCount + 1) * 1000);
   };
 
   /**
@@ -238,14 +266,14 @@ export class Hap {
     for (const x of Object.values(latestSync)) {
       if (!x.unavailable && !devices.find(y => x.sync.id === y.id)) {
         if (x.sync.traits) {    // disables pre-merged/unmerged sensors.
-	  const sync = x.sync;
-	  const {id, type, traits, ..._sync} = sync;
-	  x.sync = {
-	    id: id,
-	    type: type,
-	    _traits: traits, 
-	    ..._sync,
-	  }
+          const sync = x.sync;
+          const {id, type, traits, ..._sync} = sync;
+          x.sync = {
+            id: id,
+            type: type,
+            _traits: traits, 
+            ..._sync,
+          };
         }
       }
       if (x.unavailable && x.sync?.traits) {    // keep as zombie device
