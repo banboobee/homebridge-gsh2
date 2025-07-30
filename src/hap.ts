@@ -51,7 +51,7 @@ export class Hap {
   private cachedInstances = [];
   private discoveredInstances = [];
 
-  public ready: boolean;
+  public ready: boolean = undefined;
   public sensors;
 
   private dummy = () => {};
@@ -62,6 +62,8 @@ export class Hap {
   /* event tracking */
   // evInstances: Instance[] = [];
   // evServices: ServiceType[] = [];
+  private monitor = undefined;
+
   reportStateSubject = new Subject();
   pendingStateReport = [];
 
@@ -188,9 +190,9 @@ export class Hap {
     this.waitForNoMoreDiscoveries();
     this.hapClient.on('instance-discovered', this.waitForNoMoreDiscoveries);
 
-    this.hapClient.on('hapEvent', (event) => {
-      this.handleHapEvent(event);
-    });
+    // this.hapClient.on('hapEvent', (event) => {
+    //   this.handleHapEvent(event);
+    // });
   }
 
   waitForNoMoreDiscoveries = (instance = undefined) => {
@@ -200,27 +202,23 @@ export class Hap {
         // console.log(this.discoveredInstances);
       }
     }
+    if (this.ready === false) {
+      return;	// currently initializing. May loose this instance.
+    }
 
     // Clear any existing timeout
     if (this.discoveryTimeout) {
       clearTimeout(this.discoveryTimeout);
     }
     const missingInstanceCount = this.cachedInstances.length - this.discoveredInstances.length;
-    if (!missingInstanceCount) {
-      this.log.info(`Discovered all of ${this.cachedInstances.length} homebridge instances for cached services.`);
-    }
 
     // Set up the timeout
     this.discoveryTimeout = setTimeout(() => {
-      const missingInstanceCount = this.cachedInstances.length - this.discoveredInstances.length;
-      if (missingInstanceCount) {
-        this.log.error(`Failed to find ${missingInstanceCount} homebridge instances for cached services.`);
-      }
       this.log.debug('No more instances discovered, publishing services');
-      this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
+      // this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
       this.start();
       this.requestSync();
-      this.hapClient.on('instance-discovered', this.requestSync.bind(this));  // Request sync on new instance discovery
+      // this.hapClient.on('instance-discovered', this.requestSync.bind(this));  // Request sync on new instance discovery
     }, this.configDiscoveryTimeout * (missingInstanceCount + 1) * 1000);
   };
 
@@ -228,21 +226,35 @@ export class Hap {
    * Start processing
    */
   async start() {
+    this.ready = false;
+    this.log.info(`Discovered ${this.discoveredInstances.length} out of ${this.cachedInstances.length} cached homebridge instances.`);
+    if (this.startTimeout) {
+      clearTimeout(this.startTimeout);
+    }
+    this.monitor?.removeAllListeners('service-update');
+    this.monitor?.finish();
     this.services = await this.loadAccessories();
     this.log.info(`Discovered ${this.services.length} accessories`);
     this.ready = true;
     await this.buildSyncResponse();
+    // this.requestSync();
     const evServices: ServiceType[] = this.services.filter(x => this.evTypes.some(uuid => x.serviceCharacteristics.find(c => c.uuid === uuid)));
     this.log.debug(`Monitoring ${evServices.length} services for changes`);
 
-    const monitor = await this.hapClient.monitorCharacteristics(evServices);
-    monitor.on('service-update', (services) => {
+    this.monitor = await this.hapClient.monitorCharacteristics(evServices);
+    this.monitor.on('service-update', (services) => {
       // this.log.debug(`Service Update ${services}`);
       services.map((service: any) => {
         this.reportStateSubject.next(service.uniqueId);
       });
       // this.reportStateSubject.next(services[0].uniqueId);
     });
+
+    this.startTimeout = setTimeout(() => {
+      this.hapClient.refreshInstances();
+      this.waitForNoMoreDiscoveries();
+      // this.start();
+    }, 15 * 60 * 1000);
   }
 
   /**
@@ -509,18 +521,18 @@ export class Hap {
    * Handle events from HAP
    * @param event
    */
-  async handleHapEvent(events) {
-    for (const event of events) {
-      const index = this.services.findIndex(item => item.uniqueId === event.uniqueId);
-      if (index === -1) {
-        this.log.debug(`[handleHapEvent] Service not found in services list ${event}`);
-        return;
-      } else {
-        this.services[index] = event;
-        this.reportStateSubject.next(event.uniqueId);
-      }
-    }
-  }
+  // async handleHapEvent(events) {
+  //   for (const event of events) {
+  //     const index = this.services.findIndex(item => item.uniqueId === event.uniqueId);
+  //     if (index === -1) {
+  //       this.log.debug(`[handleHapEvent] Service not found in services list ${event}`);
+  //       return;
+  //     } else {
+  //       this.services[index] = event;
+  //       this.reportStateSubject.next(event.uniqueId);
+  //     }
+  //   }
+  // }
 
   /**
    * Generate a state report from the list pending
