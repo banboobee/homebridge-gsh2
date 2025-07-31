@@ -198,8 +198,10 @@ export class Hap {
   waitForNoMoreDiscoveries = (instance = undefined) => {
     if (instance) {
       if (this.cachedInstances.find(x => instance.username === x)) {
-        this.discoveredInstances.push(instance.username);
-        // console.log(this.discoveredInstances);
+	if (!this.discoveredInstances.find(x => instance.username === x)) {
+          this.discoveredInstances.push(instance.username);
+          // console.log(this.discoveredInstances);
+	}
       }
     }
     if (this.ready === false) {
