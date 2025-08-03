@@ -50,6 +50,8 @@ export class Hap {
 
   private cachedInstances = [];
   private discoveredInstances = [];
+  private unavailableServiceCount = 0;
+
 
   public ready: boolean = undefined;
   public sensors;
@@ -247,16 +249,18 @@ export class Hap {
     this.monitor.on('service-update', (services) => {
       // this.log.debug(`Service Update ${services}`);
       services.map((service: any) => {
+	// this.log.debug(`Service Update ${service.serviceName}`);
         this.reportStateSubject.next(service.uniqueId);
       });
       // this.reportStateSubject.next(services[0].uniqueId);
     });
 
-    this.startTimeout = setTimeout(() => {
-      this.hapClient.refreshInstances();
-      this.waitForNoMoreDiscoveries();
-      // this.start();
-    }, 15 * 60 * 1000);
+    if (this.unavailableServiceCount > 0) {
+      this.startTimeout = setTimeout(() => {
+	this.hapClient.refreshInstances();
+	this.waitForNoMoreDiscoveries();
+      }, 15 * 60 * 1000);
+    }
   }
 
   /**
@@ -503,8 +507,10 @@ export class Hap {
         if (latestSync[x].unavailable > lostlimit) {  // delete the device
           this.log.warn(`Removed accessory '${name}' due to exceeding missed count limit ${lostlimit}. aid:${aid}, iid:${iid}, username:${username}`);
           delete latestSync[x];
+	  this.unavailableServiceCount--;
         } else if (latestSync[x].unavailable) {     // keep as zombie device
           this.log.warn(`Failed to find accessory '${name}' ${latestSync[x].unavailable} times. aid:${aid}, iid:${iid}, username:${username}`);
+	  this.unavailableServiceCount++;
         }
       }
 
