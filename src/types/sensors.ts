@@ -13,11 +13,17 @@ export class Sensor extends ghToHap implements ghToHap_t {
 
   private instances = {};
   private voidInstances = {};
+  private syncing = true;
 
   sync(service: ServiceType): SmartHomeV1SyncDevices | undefined {
     const traits = [];
     const attributes = {};
 
+    if (this.syncing === false) {	// switch to syncing
+      this.instances = {};
+      this.voidInstances = {};
+      this.syncing = true;
+    }
     if (!this.instances[service.uniqueId] && !this.voidInstances[service.uniqueId]) {
       const services = this.hap.services.filter(x => x.aid === service.aid && x.instance.username === service.instance.username) ?? [];
       const characteristics = [
@@ -118,6 +124,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
   }
 
   query(service: ServiceType) {
+    this.syncing = false;	// switch to query
     const response = {
       online: true,
     } as any;
