@@ -495,6 +495,7 @@ export class Hap {
           latestSync[x.uniqueId].unavailable = 0;
         }
       }
+      this.unavailableServiceCount = 0;
       for (const x of Object.keys(latestSync)) {
         if (!latestSync[x]?.unavailable) {	// consistent or wrong record
           continue;
@@ -507,12 +508,12 @@ export class Hap {
         if (latestSync[x].unavailable > lostlimit) {  // delete the device
           this.log.warn(`Removed accessory '${name}' due to exceeding missed count limit ${lostlimit}. aid:${aid}, iid:${iid}, username:${username}`);
           delete latestSync[x];
-	  this.unavailableServiceCount--;
         } else if (latestSync[x].unavailable) {     // keep as zombie device
           this.log.warn(`Failed to find accessory '${name}' ${latestSync[x].unavailable} times. aid:${aid}, iid:${iid}, username:${username}`);
 	  this.unavailableServiceCount++;
         }
       }
+      // console.log(`unavailableServiceCount: ${this.unavailableServiceCount}`);
 
       return services;
     }).catch((e) => {
