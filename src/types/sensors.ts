@@ -16,6 +16,20 @@ export class Sensor extends ghToHap implements ghToHap_t {
   private syncing = true;
 
   sync(service: ServiceType): SmartHomeV1SyncDevices | undefined {
+    const representativeCharacteristics = {
+      [Service.WindowCovering]: Characteristic.CurrentPosition,
+      [Service.LockMechanism]: Characteristic.LockCurrentState,
+      [Service.Switch]: Characteristic.On,
+    };
+    const sensorCharacteristics = [
+      Characteristic.CurrentTemperature,
+      Characteristic.CurrentRelativeHumidity,
+      Characteristic.OccupancyDetected,
+      Characteristic.ContactSensorState,
+      Characteristic.MotionDetected,
+      Characteristic.StatusLowBattery,
+      Characteristic.BatteryLevel,
+    ];
     const traits = [];
     const attributes = {};
 
@@ -26,37 +40,37 @@ export class Sensor extends ghToHap implements ghToHap_t {
     }
     if (!this.instances[service.uniqueId] && !this.voidInstances[service.uniqueId]) {
       const services = this.hap.services.filter(x => x.aid === service.aid && x.instance.username === service.instance.username) ?? [];
-      const characteristics = [
-        Characteristic.CurrentPosition,
-        Characteristic.LockCurrentState,
-        Characteristic.On,
-        Characteristic.CurrentTemperature,
-        Characteristic.CurrentRelativeHumidity,
-        Characteristic.OccupancyDetected,
-        Characteristic.ContactSensorState,
-        Characteristic.MotionDetected,
-        Characteristic.StatusLowBattery,
-        Characteristic.BatteryLevel,
-      ];
-      let representative = undefined;
+      const representativeServices = services.filter(x => 
+        Object.keys(representativeCharacteristics).includes(x.uuid),
+      ).reduce((x, service) => {
+        const y = service.serviceCharacteristics.filter(characteristic =>
+          characteristic.uuid === representativeCharacteristics[service.uuid]);
+        return [...x, ...y];
+      }, []);
       const p = {};
-      for (const characteristic of characteristics) {
-        for (const x of services) {
-          const c = x.serviceCharacteristics.find(x => x.uuid === characteristic);
+      let representative = representativeServices[0]?.uniqueId;
+      if (representative) {
+        this.instances[representative] = p;
+      }
+      // console.log(service.serviceName, representativeServices);
+      
+      for (const characteristic of sensorCharacteristics) {
+        for (const service of services) {
+          const c = service.serviceCharacteristics.find(x => x.uuid === characteristic);
           if (c) {
             if (characteristic === Characteristic.ContactSensorState &&
                 services[representative]?.uuid === Service.WindowCovering) {
-              this.hap.log.error(`Unable to merger devices due to conflicting traits. ${x.serviceName}`);
+              this.hap.log.error(`Unable to combine devices due to conflicting traits. ${service.serviceName}`);
               continue;
             }
-            representative ??= x.uniqueId;
-            if (representative === x.uniqueId) {
-              this.instances[x.uniqueId] = p;
+            representative ??= service.uniqueId;
+            if (representative === service.uniqueId) {
+              this.instances[service.uniqueId] = p;
             } else {
-              this.voidInstances[x.uniqueId] = representative;
+              this.voidInstances[service.uniqueId] = representative;
             }
             p[characteristic] = {
-              service: x,
+              service: service,
               characteristic: c,
             };
           }
