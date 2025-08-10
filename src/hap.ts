@@ -200,10 +200,10 @@ export class Hap {
   waitForNoMoreDiscoveries = (instance = undefined) => {
     if (instance) {
       if (this.cachedInstances.find(x => instance.username === x)) {
-	if (!this.discoveredInstances.find(x => instance.username === x)) {
+        if (!this.discoveredInstances.find(x => instance.username === x)) {
           this.discoveredInstances.push(instance.username);
           // console.log(this.discoveredInstances);
-	}
+        }
       }
     }
     if (this.ready === false) {
@@ -249,7 +249,7 @@ export class Hap {
     this.monitor.on('service-update', (services) => {
       // this.log.debug(`Service Update ${services}`);
       services.map((service: any) => {
-	// this.log.debug(`Service Update ${service.serviceName}`);
+        // this.log.debug(`Service Update ${service.serviceName}`);
         this.reportStateSubject.next(service.uniqueId);
       });
       // this.reportStateSubject.next(services[0].uniqueId);
@@ -257,8 +257,8 @@ export class Hap {
 
     if (this.unavailableServiceCount > 0) {
       this.startTimeout = setTimeout(() => {
-	this.hapClient.refreshInstances();
-	this.waitForNoMoreDiscoveries();
+        this.hapClient.refreshInstances();
+        this.waitForNoMoreDiscoveries();
       }, 15 * 60 * 1000);
     }
   }
@@ -510,7 +510,7 @@ export class Hap {
           delete latestSync[x];
         } else if (latestSync[x].unavailable) {     // keep as zombie device
           this.log.warn(`Failed to find accessory '${name}' ${latestSync[x].unavailable} times. aid:${aid}, iid:${iid}, username:${username}`);
-	  this.unavailableServiceCount++;
+          this.unavailableServiceCount++;
         }
       }
       // console.log(`unavailableServiceCount: ${this.unavailableServiceCount}`);
