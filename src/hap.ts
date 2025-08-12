@@ -54,12 +54,44 @@ export class Hap {
 
 
   public ready: boolean = undefined;
-  public sensors;
 
   private dummy = () => {};
   
   /* GSH Supported types */
-  private types = {};
+  sensors = new Sensor(this) as any;
+  sensorServices = [
+    'TemperatureSensor',
+    'HumiditySensor',
+    'OccupancySensor',
+    'ContactSensor',
+    'MotionSensor',
+    'Battery',
+  ];
+
+  types = {
+    Door: new Door(),
+    Fan: new Fan(),
+    Fanv2: new Fanv2(),
+    GarageDoorOpener: new GarageDoorOpener(),
+    HeaterCooler: new HeaterCooler(this),
+    HumiditySensor: new HumiditySensor(),
+    Lightbulb: new Lightbulb(),
+    LockMechanism: new LockMechanism(this),
+    Outlet: new Switch(this),
+    SecuritySystem: new SecuritySystem(),
+    Switch: new Switch(this),
+    Television: new Television(this),
+    TemperatureSensor: new TemperatureSensor(this),
+    Thermostat: new Thermostat(this),
+    Window: new Window(),
+    WindowCovering: new WindowCovering(this),
+    Speaker: this.dummy,
+    InputSource: this.dummy,
+    OccupancySensor: new OccupancySensor(),
+    ContactSensor: new ContactSensor(),
+    MotionSensor: new MotionSensor(),
+    Battery: new Battery(),
+  };
 
   /* event tracking */
   // evInstances: Instance[] = [];
@@ -119,32 +151,11 @@ export class Hap {
     this.accessorySerialFilter = config.accessorySerialFilter || [];
     config.instanceBlacklist = config.instanceDenylist || [];
 
-    /* GSH Supported types */
-    this.sensors = new Sensor(this);
-    this.types = {
-      Door: new Door(),
-      Fan: new Fan(),
-      Fanv2: new Fanv2(),
-      GarageDoorOpener: new GarageDoorOpener(),
-      HeaterCooler: new HeaterCooler(this),
-      HumiditySensor: config.mergeSensorDevices ? this.sensors : new HumiditySensor(),
-      Lightbulb: new Lightbulb(),
-      LockMechanism: new LockMechanism(this),
-      Outlet: new Switch(this),
-      SecuritySystem: new SecuritySystem(),
-      Switch: new Switch(this),
-      Television: new Television(this),
-      TemperatureSensor: config.mergeSensorDevices ? this.sensors : new TemperatureSensor(this),
-      Thermostat: new Thermostat(this),
-      Window: new Window(),
-      WindowCovering: new WindowCovering(this),
-      Speaker: this.dummy,
-      InputSource: this.dummy,
-      OccupancySensor: config.mergeSensorDevices ? this.sensors : new OccupancySensor(),
-      ContactSensor: config.mergeSensorDevices ? this.sensors : new ContactSensor(),
-      MotionSensor: config.mergeSensorDevices ? this.sensors : new MotionSensor(),
-      Battery: config.mergeSensorDevices ? this.sensors : new Battery(),
-    };
+    if (config.combineSensors) {
+      for (const service of this.sensorServices) {
+        this.types[service] = this.sensors;
+      }
+    }
 
     // eslint-disable-next-line max-len
     this.log.debug(`Waiting ${this.configDiscoveryWait} seconds before starting instance discovery, and ${this.configDiscoveryTimeout} seconds after last device is discovered to publish to Google.`);
@@ -197,7 +208,7 @@ export class Hap {
     // });
   }
 
-  waitForNoMoreDiscoveries = (instance = undefined) => {
+  waitForNoMoreDiscoveries = (instance?) => {
     if (instance) {
       if (this.cachedInstances.find(x => instance.username === x)) {
         if (!this.discoveredInstances.find(x => instance.username === x)) {
