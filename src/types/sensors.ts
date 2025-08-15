@@ -6,7 +6,7 @@ import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
 export class Sensor extends ghToHap implements ghToHap_t {
   constructor(
-    private hap: Hap = undefined,
+    private hap?: Hap,
   ) {
     super();
   }
@@ -43,8 +43,9 @@ export class Sensor extends ghToHap implements ghToHap_t {
       const representativeServices = services.filter(x => 
         Object.keys(representativeCharacteristics).includes(x.uuid),
       ).reduce((x, service) => {
-        const y = service.serviceCharacteristics.filter(characteristic =>
-          characteristic.uuid === representativeCharacteristics[service.uuid]);
+        const y = service.serviceCharacteristics
+          .filter(characteristic => characteristic.uuid === representativeCharacteristics[service.uuid])
+          .map(characteristic => service);
         return [...x, ...y];
       }, []);
       const p = {};
