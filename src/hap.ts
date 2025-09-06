@@ -128,6 +128,8 @@ export class Hap {
     Characteristic.ContactSensorState,
     Characteristic.CurrentMediaState,
     Characteristic.MotionDetected,
+    Characteristic.StatusLowBattery,
+    Characteristic.BatteryLevel,
   ];
 
   accessoryFilter: Array<string> = [];
