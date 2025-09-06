@@ -20,7 +20,7 @@ export class WindowCovering extends ghToHap implements ghToHap_t {
       openDirection: ['UP', 'DOWN'],
     };
 
-    if (this.hap.config.mergeSensorDevices) {
+    if (this.hap.config.combineSensors) {
       const sensors = this.hap.sensors.sync(service);
       traits = [...traits, ...sensors.traits];
       attributes = {...attributes, ...sensors.attributes};
@@ -40,7 +40,7 @@ export class WindowCovering extends ghToHap implements ghToHap_t {
       online: true,
       openPercent: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentPosition).value,
     };
-    if (this.hap.config.mergeSensorDevices) {
+    if (this.hap.config.combineSensors) {
       const sensors = this.hap.sensors.query(service);
       response = {...response, ...sensors};
       // console.log(service.serviceName, response);

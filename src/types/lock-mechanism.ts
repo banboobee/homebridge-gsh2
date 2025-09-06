@@ -19,7 +19,7 @@ export class LockMechanism extends ghToHap implements ghToHap_t {
     ];
     let attributes = {};
 
-    if (this.hap.config.mergeSensorDevices) {
+    if (this.hap.config.combineSensors) {
       const sensors = this.hap.sensors.sync(service);
       traits = [...traits, ...sensors.traits];
       attributes = {...attributes, ...sensors.attributes};
@@ -63,7 +63,7 @@ export class LockMechanism extends ghToHap implements ghToHap_t {
       }
     }
 
-    if (this.hap.config.mergeSensorDevices) {
+    if (this.hap.config.combineSensors) {
       const sensors = this.hap.sensors.query(service);
       response = {...response, ...sensors};
       // console.log(service.serviceName, response);

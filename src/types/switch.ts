@@ -24,7 +24,7 @@ export class Switch extends ghToHap implements ghToHap_t {
 	service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness)) {
       traits.push('action.devices.traits.Brightness');
     }
-    if (this.hap.config.mergeSensorDevices) {
+    if (this.hap.config.combineSensors) {
       const sensors = this.hap.sensors.sync(service);
       traits = [...traits, ...sensors.traits];
       attributes = {...attributes, ...sensors.attributes};
@@ -49,7 +49,7 @@ export class Switch extends ghToHap implements ghToHap_t {
 	service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness)) {
       response.brightness = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness).value;
     }
-    if (this.hap.config.mergeSensorDevices) {
+    if (this.hap.config.combineSensors) {
       const sensors = this.hap.sensors.query(service);
       response = {...response, ...sensors};
       // console.log(service.serviceName, response);
