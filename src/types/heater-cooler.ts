@@ -64,6 +64,11 @@ export class HeaterCooler extends ghToHap implements ghToHap_t {
       thermostatTemperatureAmbient: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentTemperature).value,
     } as any;
 
+    // check if device reports CurrentRelativeHumidity
+    if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentRelativeHumidity)) {
+      response.thermostatHumidityAmbient = service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentRelativeHumidity).value;
+    }
+
     // check if device reports CoolingThresholdTemperature and HeatingThresholdTemperature
     if (service.serviceCharacteristics.find(x => x.uuid === Characteristic.CoolingThresholdTemperature)
       && service.serviceCharacteristics.find(x => x.uuid === Characteristic.HeatingThresholdTemperature)) {
