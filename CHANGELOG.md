@@ -2,6 +2,17 @@
 
 All notable changes to `homebridge-gsh` will be documented in this file. This project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## v4.0.3 (2025-09-13)
+
+### Changes
+
+- Implement channel/input selection of Television device #22, tks @banboobee
+- Implemented regular expression searching for accessoryFilter #23, tks @banboobee
+
+### Fixes
+
+- Dependancy Updates
+
 ## v4.0.2 (2025-06-19)
 
 ### Changes

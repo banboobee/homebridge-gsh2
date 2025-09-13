@@ -1,18 +1,60 @@
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
+import { Hap } from '../hap';
+import { PluginConfig } from '../interfaces';
 import { Television } from './television';
 
-const television = new Television();
+import { Log } from '../logger';
+
+
+class socketMock {
+  on(event: string, callback: any) {
+    if (event === 'websocket-status') {
+      callback('websocket-status');
+    }
+    if (event === 'json') {
+      callback({ serverMessage: 'serverMessage' });
+    }
+  }
+
+  sendJson(data: any) {
+    // eslint-disable-next-line no-console
+    console.log('sendJson', data);
+  }
+}
+
+const config: PluginConfig = {
+  name: 'Google Smart Home',
+  token: '1234567890',
+  notice: 'Keep your token a secret!',
+  debug: false,
+  platform: 'google-smarthome',
+  twoFactorAuthPin: '123-456',
+};
+
+const log = new Log(console, true);
+
+const hap = new Hap(socketMock, log, '031-45-154', config, {});
+
+const television = new Television(hap);
 
 describe('television', () => {
   describe('sync message', () => {
     it('television with On/Off only', async () => {
+      const attributes = {
+        'availableApplications': [],
+        'commandOnlyOnOff': false,
+        'queryOnlyOnOff': false,
+        'supportActivityState': false,
+        'supportPlaybackState': false,
+        'transportControlSupportedCommands': [],
+      };
       const response: any = television.sync(televisionServiceOnOff);
       expect(response).toBeDefined();
       expect(response.type).toBe('action.devices.types.TV');
       expect(response.traits).toContain('action.devices.traits.OnOff');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
       expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
-      expect(response.attributes).not.toBeDefined();
+      expect(response.attributes).toEqual(attributes);
       // await sleep(10000)
     });
   });
