@@ -23,7 +23,7 @@ describe('motionSensor', () => {
       const response = motionSensor.query(motionSensorTemp);
       expect(response).toBeDefined();
       expect(response.occupancy).toBeDefined();
-      expect(response.occupancy === 'OCCUPIED' || response.motion === 'UNOCCUPIED');
+      expect(response.occupancy === 'OCCUPIED' || response.occupancy === 'UNOCCUPIED');
       expect(response.online).toBeDefined();
       // await sleep(10000)
     });
