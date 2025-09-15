@@ -21,7 +21,7 @@ export class MotionSensor extends ghToHap implements ghToHap_t {
   query(service: ServiceType) {
     return {
       online: true,
-      occupancy: service.serviceCharacteristics.find(x => x.uuid === Characteristic.MotionDetected)?.value ? 'OCCUPIED': 'UNOCCUPIED',
+      occupancy: service.serviceCharacteristics.find(x => x.uuid === Characteristic.MotionDetected)?.value ? 'OCCUPIED' : 'UNOCCUPIED',
     } as any;
   }
 
