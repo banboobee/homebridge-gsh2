@@ -36,7 +36,7 @@ export class Battery extends ghToHap implements ghToHap_t {
           return current >= y ? i : x;
         }, 0)
       ];
-      response['descriptiveCapacityRemaining'] = description,
+      response['descriptiveCapacityRemaining'] = description;
       response['capacityRemaining'] = [{
         rawValue: current,
         unit: 'PERCENTAGE',
