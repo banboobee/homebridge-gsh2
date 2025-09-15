@@ -21,7 +21,7 @@ export class Switch extends ghToHap implements ghToHap_t {
 
     // check if the switch has the brightness characteristic
     if (service.type === 'Switch' &&
-	service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness)) {
+    service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness)) {
       traits.push('action.devices.traits.Brightness');
     }
     if (this.hap.config.combineSensors) {
