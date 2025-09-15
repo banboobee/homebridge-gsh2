@@ -674,14 +674,7 @@ const commandBrightness = {
       },
     },
   ],
-  // execution: [
-  //   {
-  //     command: 'action.devices.commands.OnOff',
-  //     params: {
-  //       on: true,
-  //     },
-  //   },
-  // ],
+// Removed commented-out code block for maintainability.
 };
 
 const commandColorHSV = {
