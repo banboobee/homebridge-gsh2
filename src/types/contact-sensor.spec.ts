@@ -24,7 +24,8 @@ describe('contactSensor', () => {
       const response = contactSensor.query(contactSensorTemp);
       expect(response).toBeDefined();
       expect(response.openPercent).toBeDefined();
-      expect(response.openPercent === 0 || response.contact === 100);
+      expect(response.openPercent).toBe(0);
+      expect(response.openPercent).toBe(100);
       expect(response.online).toBeDefined();
       // await sleep(10000)
     });
