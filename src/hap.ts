@@ -23,8 +23,8 @@ import { LockMechanism } from './types/lock-mechanism';
 import { SecuritySystem } from './types/security-system';
 import { Switch } from './types/switch';
 import { Television } from './types/television';
-import { OccupancySensor } from './types/occupancy-sensor';
 import { ContactSensor } from './types/contact-sensor';
+import { OccupancySensor } from './types/occupancy-sensor';
 import { MotionSensor } from './types/motion-sensor';
 import { TemperatureSensor } from './types/temperature-sensor';
 import { Battery } from './types/battery-status';
@@ -51,7 +51,6 @@ export class Hap {
   private cachedInstances = [];
   private discoveredInstances = [];
   private unavailableServiceCount = 0;
-
 
   public ready: boolean = undefined;
 
@@ -87,8 +86,8 @@ export class Hap {
     WindowCovering: new WindowCovering(this),
     Speaker: this.dummy,
     InputSource: this.dummy,
-    OccupancySensor: new OccupancySensor(),
     ContactSensor: new ContactSensor(),
+    OccupancySensor: new OccupancySensor(),
     MotionSensor: new MotionSensor(),
     Battery: new Battery(),
   };
@@ -124,8 +123,8 @@ export class Hap {
     Characteristic.SecuritySystemCurrentState,
     Characteristic.ActiveIdentifier,
     Characteristic.Mute,
-    Characteristic.OccupancyDetected,
     Characteristic.ContactSensorState,
+    Characteristic.OccupancyDetected,
     Characteristic.CurrentMediaState,
     Characteristic.MotionDetected,
     Characteristic.StatusLowBattery,
