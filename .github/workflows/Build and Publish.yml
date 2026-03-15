@@ -25,7 +25,7 @@ jobs:
 
     steps:
     # checkout repo
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v4
 
     # get branch / tag name
     - name: Get Branch / Tag Name
@@ -53,9 +53,25 @@ jobs:
     needs: [get_tags]
     name: Publish Release Version
     if: ${{ needs.get_tags.outputs.BRANCH_NAME == 'latest' }}
-    uses: homebridge/.github/.github/workflows/npm-publish-oidc.yml@latest
-    with:
-      install_cmd: npm ci && cd homebridge-ui/public && npm ci
+    runs-on: ubuntu-latest
+    outputs:
+      NPM_VERSION: ${{ steps.package-version.outputs.current-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+      - name: install
+        run: npm ci && cd homebridge-ui/public && npm ci
+      - name: publish using NPM_TOKEN
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Return NPM Package Version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
 
   publish_test_release:
     permissions:
@@ -63,19 +79,38 @@ jobs:
     needs: [get_tags]
     name: Publish Test Version - ${{ needs.get_tags.outputs.BRANCH_NAME }}
     if: ${{ needs.get_tags.outputs.BRANCH_NAME != 'latest' }}
-    uses: homebridge/.github/.github/workflows/npm-publish-oidc.yml@latest
-    with:
-      tag: ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
-      dynamically_adjust_version: true
-      npm_version_command: 'pre'
-      pre_id: ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
-      install_cmd: npm ci && cd homebridge-ui/public && npm ci
+    runs-on: ubuntu-latest
+    outputs:
+      NPM_VERSION: ${{ steps.package-version.outputs.current-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+      - name: install
+        run: npm ci && cd homebridge-ui/public && npm ci
+      - name: Fetch Adjust version script
+        run: wget -q https://raw.githubusercontent.com/homebridge/.github/latest/.github/npm-version-script.js
+        working-directory: .github
+      - name: Adjust version
+        run: node .github/npm-version-script.js ${{ github.ref }} ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
+      - name: npm version (without git commit)
+        run: npm version pre --preid=${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }} --no-git-tag-version
+      - name: publish using NPM_TOKEN
+        run: npm publish --access public --tag=${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }} --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Return NPM Package Version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
 
   publish_github_release:
     needs: [publish_prod_release]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v4
     - name: Create Release
       uses: softprops/action-gh-release@v2
       env:
