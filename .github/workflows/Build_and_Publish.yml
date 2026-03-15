@@ -9,7 +9,7 @@ name: "Build, Publish and Release"
  # 2 - Create the npm package using the package.json version tag ( or for beta releases, adds a beta tag and increments as needed )
  # 3 - Publish the npm package
  # 4 - For releases against the latest branch, create a github release as well
- 
+  
 on:
   push:
     branches: [beta-*.*.*, beta]
@@ -25,7 +25,7 @@ jobs:
 
     steps:
     # checkout repo
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v4
 
     # get branch / tag name
     - name: Get Branch / Tag Name
@@ -46,7 +46,6 @@ jobs:
     outputs:
       BRANCH_NAME: ${{ steps.get_branch.outputs.BRANCH_NAME }}
       TARGET_IMAGE_TAG: ${{ steps.get_tag.outputs.TARGET_IMAGE_TAG }}
-
 
   publish_prod_release:
     permissions:
@@ -76,7 +75,7 @@ jobs:
     needs: [publish_prod_release]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v4
     - name: Create Release
       uses: softprops/action-gh-release@v2
       env:
