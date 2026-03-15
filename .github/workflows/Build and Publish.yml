@@ -8,8 +8,8 @@ name: "Build, Publish and Release"
  # 1 - Run the documentation script against the package
  # 2 - Create the npm package using the package.json version tag ( or for beta releases, adds a beta tag and increments as needed )
  # 3 - Publish the npm package
- # 4 - For releases against the main branch, create a github release as well
-
+ # 4 - For releases against the latest branch, create a github release as well
+  
 on:
   push:
     branches: [beta-*.*.*, beta]
@@ -39,7 +39,7 @@ jobs:
     - name: Get Image Tag
       id: get_tag
       run: |
-        export TARGET_IMAGE_TAG=$(if [ "${{ steps.get_branch.outputs.BRANCH_NAME }}" = "main" ]; then echo "main"; else echo "${{ steps.get_branch.outputs.BRANCH_NAME }}" | awk -F- '{ print $1 }'; fi)
+        export TARGET_IMAGE_TAG=$(if [ "${{ steps.get_branch.outputs.BRANCH_NAME }}" = "latest" ]; then echo "latest"; else echo "${{ steps.get_branch.outputs.BRANCH_NAME }}" | awk -F- '{ print $1 }'; fi)
         echo $TARGET_IMAGE_TAG
         echo "TARGET_IMAGE_TAG=${TARGET_IMAGE_TAG}" >> $GITHUB_OUTPUT
 
@@ -89,7 +89,7 @@ jobs:
       id-token: write
     needs: [get_tags, create_documentation]
     name: Publish Release Version
-    if: ${{ needs.get_tags.outputs.BRANCH_NAME == 'main' }}
+    if: ${{ needs.get_tags.outputs.BRANCH_NAME == 'latest' }}
     uses: homebridge/.github/.github/workflows/npm-publish-oidc.yml@latest
     with:
       install_cmd: npm ci
@@ -99,7 +99,7 @@ jobs:
       id-token: write
     needs: [get_tags, create_documentation]
     name: Publish Test Version - ${{ needs.get_tags.outputs.BRANCH_NAME }}
-    if: ${{ needs.get_tags.outputs.BRANCH_NAME != 'main' }}
+    if: ${{ needs.get_tags.outputs.BRANCH_NAME != 'latest' }}
     uses: homebridge/.github/.github/workflows/npm-publish-oidc.yml@latest
     with:
       tag: ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
