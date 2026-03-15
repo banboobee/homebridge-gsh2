@@ -70,6 +70,7 @@ export class Hap {
     InputSource: this.dummy,
     ContactSensor: new ContactSensor(),
     OccupancySensor: new OccupancySensor(),
+    MotionSensor: new MotionSensor(),
     Battery: new Battery(),
   };
 
