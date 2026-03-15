@@ -56,7 +56,7 @@ jobs:
     if: ${{ needs.get_tags.outputs.BRANCH_NAME == 'latest' }}
     uses: homebridge/.github/.github/workflows/npm-publish-oidc.yml@latest
     with:
-      install_cmd: npm ci
+      install_cmd: npm ci && cd homebridge-ui/public && npm ci
 
   publish_test_release:
     permissions:
@@ -70,7 +70,7 @@ jobs:
       dynamically_adjust_version: true
       npm_version_command: 'pre'
       pre_id: ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
-      install_cmd: npm ci
+      install_cmd: npm ci && cd homebridge-ui/public && npm ci
 
   publish_github_release:
     needs: [publish_prod_release]
