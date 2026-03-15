@@ -45,3 +45,26 @@ updates:
     prefix: "chore"
     prefix-development: "chore"
     include: "scope"
+
+- package-ecosystem: npm
+  directory: "/homebridge-ui/public"
+  schedule:
+    interval: daily
+    time: "10:00"
+  open-pull-requests-limit: 10
+  assignees:
+  - NorthernMan54
+  labels:
+    - "dependencies"
+  # Group related updates together (optional)
+  groups:
+    ui-packages:
+      patterns:
+        - "*"
+  # Automatically rebase PRs when conflicts occur
+  rebase-strategy: "auto"
+  # Commit message prefix
+  commit-message:
+    prefix: "chore"
+    prefix-development: "chore"
+    include: "scope"
