@@ -9,7 +9,7 @@ name: "Build, Publish and Release"
  # 2 - Create the npm package using the package.json version tag ( or for beta releases, adds a beta tag and increments as needed )
  # 3 - Publish the npm package
  # 4 - For releases against the latest branch, create a github release as well
- 
+  
 on:
   push:
     branches: [beta-*.*.*, beta]
