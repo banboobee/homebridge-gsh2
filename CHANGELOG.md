@@ -100,3 +100,7 @@ So at the present time, we have created a new cloud server to support this offer
 Going forward we will be updating the cloud server and plugin code base, to bring its patch level up to date, and making other enhancements as needed.
 
 Thank You
+
+### Changed
+
+- Updated HapClient initialization to pass individual config properties instead of the entire config object
