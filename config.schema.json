@@ -96,9 +96,9 @@
         "maximum": 300
       },
       "enhancedSkip": {
-        "title": "<b>For 'appletv-enhanced', enable skip</b>",
+        "title": "For 'appletv-enhanced', enable skip",
         "type": "boolean",
-        "placeholder": false
+        "default": false
       }
     }
   },
