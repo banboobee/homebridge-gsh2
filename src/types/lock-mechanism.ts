@@ -14,17 +14,10 @@ export class LockMechanism extends ghToHap implements ghToHap_t {
   }
 
   sync(service: ServiceType) {
-    let traits = [
+    const traits = [
       'action.devices.traits.LockUnlock',
     ];
-    let attributes = {};
-
-    if (this.hap.config.combineSensors) {
-      const sensors = this.hap.sensors.sync(service);
-      traits = [...traits, ...sensors.traits];
-      attributes = {...attributes, ...sensors.attributes};
-      // console.log(service.serviceName, traits, attributes);
-    }
+    const attributes = {};
 
     return this.createSyncData(service, {
       type: 'action.devices.types.LOCK',
@@ -34,7 +27,7 @@ export class LockMechanism extends ghToHap implements ghToHap_t {
   }
 
   query(service: ServiceType) {
-    let response = {
+    const response = {
       online: true,
     } as any;
 
@@ -63,13 +56,7 @@ export class LockMechanism extends ghToHap implements ghToHap_t {
       }
     }
 
-    if (this.hap.config.combineSensors) {
-      const sensors = this.hap.sensors.query(service);
-      response = {...response, ...sensors};
-      // console.log(service.serviceName, response);
-    }
-
-    return response;
+    return this.createQueryData(service, response);
   }
 
   async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {

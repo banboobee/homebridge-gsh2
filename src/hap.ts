@@ -57,16 +57,6 @@ export class Hap {
   private dummy = () => {};
   
   /* GSH Supported types */
-  sensors = new Sensor(this) as any;
-  sensorServices = [
-    'TemperatureSensor',
-    'HumiditySensor',
-    'OccupancySensor',
-    'ContactSensor',
-    'MotionSensor',
-    'Battery',
-  ];
-
   types = {
     Door: new Door(),
     Fan: new Fan(),
@@ -91,6 +81,18 @@ export class Hap {
     MotionSensor: new MotionSensor(),
     Battery: new Battery(),
   };
+
+  sensorServices = [
+    'TemperatureSensor',
+    'HumiditySensor',
+    'OccupancySensor',
+    'ContactSensor',
+    'MotionSensor',
+    'Battery',
+  ];
+
+  sensors = new Sensor(this) as any;
+  sensorTypes: Record<string, any> = {};
 
   /* event tracking */
   // evInstances: Instance[] = [];
@@ -154,6 +156,7 @@ export class Hap {
 
     if (config.combineSensors) {
       for (const service of this.sensorServices) {
+        this.sensorTypes[service] = this.types[service];
         this.types[service] = this.sensors;
       }
     }
@@ -476,6 +479,9 @@ export class Hap {
             .digest('hex'),
         };
       });      // The embeded uniqueId formula is different with Hap Client
+      services.sort((a, b) => {
+        return this.sensorTypes[a.type] && !this.sensorTypes[b.type] ? -1 : 0;
+      });
       this.log.debug(`Returned ${services.length} accessories from Homebridge - post filter`);
 
       const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update

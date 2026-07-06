@@ -1,7 +1,6 @@
 import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
 import { Hap } from '../hap';
-import { Characteristic, Service } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
 export class Sensor extends ghToHap implements ghToHap_t {
@@ -11,191 +10,113 @@ export class Sensor extends ghToHap implements ghToHap_t {
     super();
   }
 
-  private instances = {};
-  private voidInstances = {};
   private syncing = true;
 
   sync(service: ServiceType): SmartHomeV1SyncDevices | undefined {
-    const representativeCharacteristics = {
-      [Service.WindowCovering]: Characteristic.CurrentPosition,
-      [Service.LockMechanism]: Characteristic.LockCurrentState,
-      [Service.Switch]: Characteristic.On,
-    };
-    const sensorCharacteristics = [
-      Characteristic.CurrentTemperature,
-      Characteristic.CurrentRelativeHumidity,
-      Characteristic.OccupancyDetected,
-      Characteristic.ContactSensorState,
-      Characteristic.MotionDetected,
-      Characteristic.StatusLowBattery,
-      Characteristic.BatteryLevel,
-    ];
-    const traits = [];
-    const attributes = {};
-
-    if (this.syncing === false) {	// switch to syncing
-      this.instances = {};
-      this.voidInstances = {};
+    if (this.syncing === false) {       // switch to syncing
+      this.primaryService = {};
+      this.secondaryServices = {};
       this.syncing = true;
     }
-    if (!this.instances[service.uniqueId] && !this.voidInstances[service.uniqueId]) {
+    if (!this.secondaryServices[service.uniqueId] && !this.primaryService[service.uniqueId]) {
       const services = this.hap.services.filter(x => x.aid === service.aid && x.instance.username === service.instance.username) ?? [];
-      const representativeServices = services.filter(x => 
-        Object.keys(representativeCharacteristics).includes(x.uuid),
-      ).reduce((x, service) => {
-        const y = service.serviceCharacteristics
-          .filter(characteristic => characteristic.uuid === representativeCharacteristics[service.uuid])
-          .map(characteristic => service);
-        return [...x, ...y];
-      }, []);
-      const p = {};
-      let representative = representativeServices[0]?.uniqueId;
-      if (representative) {
-        this.instances[representative] = p;
-      }
-      // console.log(service.serviceName, representativeServices);
-      
-      for (const characteristic of sensorCharacteristics) {
-        for (const service of services) {
-          const c = service.serviceCharacteristics.find(x => x.uuid === characteristic);
-          if (c) {
-            if (characteristic === Characteristic.ContactSensorState &&
-                services[representative]?.uuid === Service.WindowCovering) {
-              this.hap.log.error(`Unable to combine devices due to conflicting traits. ${service.serviceName}`);
-              continue;
-            }
-            representative ??= service.uniqueId;
-            if (representative === service.uniqueId) {
-              this.instances[service.uniqueId] = p;
-            } else {
-              this.voidInstances[service.uniqueId] = representative;
-            }
-            p[characteristic] = {
-              service: service,
-              characteristic: c,
-            };
+      const primaryService = services
+        .filter(x => Object.keys(this.hap.types).includes(x.type))
+        .filter(x => !this.hap.sensorServices.includes(x.type))?.[0];
+      let primarySensor = undefined;
+
+      Object.keys(this.hap.sensorTypes).forEach(sensor => {
+        const sensorService = services.filter(x => x.type === sensor)?.[0];
+        if (sensorService) {
+          if (sensorService.type === 'ContactSensor' && primaryService?.type === 'WindowCovering') {
+            this.hap.log.error(`Unable to combine ${sensorService.serviceName} due to conflicting traits. ${service.serviceName}`);
+            return;
           }
+          if (primarySensor === undefined) {
+            primarySensor = sensorService;
+            this.secondaryServices[primarySensor.uniqueId] = [];
+            if (primaryService) {
+              // console.log('primaryService:', primaryService.serviceName, ',type:', primaryService.type, ',primarySensor:', primarySensor.serviceName, ',type:', sensorService.type);
+              this.primaryService[primarySensor.uniqueId] = primaryService.uniqueId;
+              this.hap.types[primaryService.type].secondaryServices[primaryService.uniqueId] = [primarySensor];
+              this.hap.types[primaryService.type].updateSyncResponse[primaryService.uniqueId] = (primary, response) => {
+                const secondary = this.hap.types[primary.type].secondaryServices[primary.uniqueId]?.[0];
+                if (secondary) {
+                  this.syncSecondaries(secondary, response);
+                  // console.log('primaryService:', primary.serviceName, ',secondaryService:', secondary.serviceName, ',sync:', response);
+                }
+                return response;
+              };
+              this.hap.types[primaryService.type].updateQueryResponse[primaryService.uniqueId] = (primary, response) => {
+                const secondary = this.hap.types[primary.type].secondaryServices[primary.uniqueId]?.[0];
+                if (secondary) {
+                  this.querySecondaries(secondary, response);
+                  // console.log('primaryService:', primary.serviceName, ',secondaryService:', secondary.serviceName, ',query:', response);
+                }
+                return response;
+              };
+              // console.log(this.hap.types[primaryService.type]);
+            }
+            this.updateSyncResponse[primarySensor.uniqueId] = (primary, response) => {
+              this.syncSecondaries(primary, response);
+              return response;
+            };
+            this.updateQueryResponse[primarySensor.uniqueId] = (primary, response) => {
+              this.querySecondaries(primary, response);
+              return response;
+            };
+          } else {
+            this.primaryService[sensorService.uniqueId] = primarySensor.uniqueId;
+          }
+          // console.log('type:', service.type, ',primary:', primarySensor.serviceName, ',secondary:', sensorService.type);
+          this.secondaryServices[primarySensor.uniqueId].push(sensorService);
         }
-      }
-      // console.log(Object.keys(this.instances).map(x => this.hap.services.find(y => y.uniqueId  === x).serviceName));
-      // console.log(Object.keys(this.voidInstances).map(x => this.hap.services.find(y => y.uniqueId === x).serviceName));
-      // console.log(`# of sensor services: ${Object.keys(this.instances).length}`);
-      // console.log(`# of void sensor services: ${Object.keys(this.voidInstances).length}`);
+      });
     }
-    if (this.voidInstances[service.uniqueId]) {
+    if (this.primaryService[service.uniqueId]) {
       return undefined;
     }
-    const instance = this.instances[service.uniqueId];
 
-    // check if the device reports CurrentTemperature
-    if (instance?.[Characteristic.CurrentTemperature]) {
-      traits.push('action.devices.traits.TemperatureControl');
-      attributes['queryOnlyTemperatureControl'] = true;
-      attributes['temperatureUnitForUX'] = this.hap?.config.forceFahrenheit ? 'F' : 'C';
-    }
-
-    // check if the device reports CurrentRelativeHumidity
-    if (instance?.[Characteristic.CurrentRelativeHumidity]) {
-      traits.push('action.devices.traits.HumiditySetting');
-      attributes['queryOnlyHumiditySetting'] = true;
-    }
-
-    // check if the device reports OccupancyDetected
-    if (instance?.[Characteristic.OccupancyDetected]) {
-      traits.push('action.devices.traits.OccupancySensing');
-      attributes['occupancySensorConfiguration'] = [{
-        occupancySensorType: 'PIR',
-      }];
-    }
-
-    // check if the device reports MotionDetected
-    if (instance?.[Characteristic.MotionDetected]) {
-      traits.push('action.devices.traits.OccupancySensing');
-      attributes['occupancySensorConfiguration'] = [{
-        occupancySensorType: 'PHYSICAL_CONTACT',
-      }];
-    }
-
-    // check if the device reports ContactSensorState
-    if (instance?.[Characteristic.ContactSensorState]) {
-      traits.push('action.devices.traits.OpenClose');
-      attributes['discreteOnlyOpenClose'] = true;
-      attributes['openDirection'] = ['LEFT', 'RIGHT'];
-      attributes['queryOnlyOpenClose'] = true;
-    }
-
-    // check if the device reports BatteryLevel or StatusLowBattery
-    if (instance?.[Characteristic.StatusLowBattery] || instance?.[Characteristic.BatteryLevel]) {
-      traits.push('action.devices.traits.EnergyStorage');
-      attributes['queryOnlyEnergyStorage'] = true;
-    }
-
-    // console.log(traits, attributes);
     return this.createSyncData(service, {
       type: 'action.devices.types.SENSOR',
-      traits,
-      attributes,
+      traits: [],
+      attributes: {},
     });
   }
 
+  syncSecondaries(service: ServiceType, response: any) {
+    this.secondaryServices[service.uniqueId]?.forEach(sensor => {
+      const update = this.hap.sensorTypes[sensor.type].sync(sensor);
+      response.traits = [...response.traits, ...update.traits];
+      response.attributes = {...response.attributes, ...update.attributes};
+    });
+
+    return response;
+  }
+
   query(service: ServiceType) {
-    this.syncing = false;	// switch to query
+    this.syncing = false;       // switch to query
     const response = {
       online: true,
     } as any;
-    const representative = this.voidInstances[service.uniqueId];
-    const instance = this.instances[service.uniqueId] ?? this.instances[representative];
-    if (representative) {	// slave sensor
-      response['id'] = representative;
+
+    const primary = this.primaryService[service.uniqueId];
+    if (primary) {
+      const primaryService = this.hap.services.find(x => x.uniqueId === primary);
+      const primaryResponse = this.hap.types[primaryService.type].query(primaryService);
+      primaryResponse['id'] = primary;
+      
+      return primaryResponse;
     }
 
-    // check if the device reports CurrentTemperature
-    if (instance?.[Characteristic.CurrentTemperature]) {
-      response['temperatureAmbientCelsius'] = instance[Characteristic.CurrentTemperature].characteristic?.value;
-    }
+    return this.createQueryData(service, response);
+  }
 
-    // check if the device reports CurrentRelativeHumidity
-    if (instance?.[Characteristic.CurrentRelativeHumidity]) {
-      response['humidityAmbientPercent'] = instance[Characteristic.CurrentRelativeHumidity].characteristic?.value;
-    }
-    
-    // check if the device reports OccupancyDetected
-    if (instance?.[Characteristic.OccupancyDetected]) {
-      response['occupancy'] = instance[Characteristic.OccupancyDetected].characteristic?.value ? 'OCCUPIED': 'UNOCCUPIED';
-    }
-    
-    // check if the device reports MotionDetected
-    if (instance?.[Characteristic.MotionDetected]) {
-      response['occupancy'] = instance[Characteristic.MotionDetected].characteristic?.value ? 'OCCUPIED': 'UNOCCUPIED';
-    }
-    
-    // check if the device reports ContactSensorState
-    if (instance?.[Characteristic.ContactSensorState]) {
-      response['openPercent'] = instance[Characteristic.ContactSensorState].characteristic?.value ? 100: 0;
-    }
-    
-    // check if the device reports BatteryLevel or StatusLowBattery
-    const lowBattery = instance?.[Characteristic.StatusLowBattery]?.characteristic?.value as number;
-    if (instance?.[Characteristic.StatusLowBattery]) {
-      if (lowBattery !== undefined) {
-        response['descriptiveCapacityRemaining'] = lowBattery ? 'CRITICALLY_LOW' : 'MEDIUM';
-      }
-    }
-    if (instance?.[Characteristic.BatteryLevel]) {
-      const descriptions = ['CRITICALLY_LOW', 'CRITICALLY_LOW', 'LOW', 'MEDIUM', 'HIGH', 'FULL', 'FULL'];
-      const thresholds = [0, 10, 20, 40, 80, 90, 100];
-      const current = instance[Characteristic.BatteryLevel].characteristic?.value as number;
-      const description = lowBattery ? descriptions[0] : descriptions[
-        thresholds.reduce((x, y, i) => {
-          return current >= y ? i : x;
-        }, 0)
-      ];
-      response['descriptiveCapacityRemaining'] = description,
-      response['capacityRemaining'] = [{
-        rawValue: current,
-        unit: 'PERCENTAGE',
-      }];
-    }
+  querySecondaries(service: ServiceType, response: any) {
+    this.secondaryServices?.[service.uniqueId].forEach(sensor => {
+      const update = this.hap.sensorTypes[sensor.type].query(sensor);
+      Object.assign(response, update);
+    });
     // console.log(`${service.serviceName}\n${service.uniqueId} ${JSON.stringify(response, null, 2)}`);
 
     return response;

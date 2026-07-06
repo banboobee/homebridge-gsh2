@@ -14,21 +14,15 @@ export class Switch extends ghToHap implements ghToHap_t {
 
   sync(service: ServiceType) {
     const type = service.type === 'Switch' ? 'action.devices.types.SWITCH' : 'action.devices.types.OUTLET';
-    let traits = [
+    const traits = [
       'action.devices.traits.OnOff',
     ];
-    let attributes = {};
+    const attributes = {};
 
     // check if the switch has the brightness characteristic
     const brightnessCharacteristic = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness);
     if (service.type === 'Switch' && brightnessCharacteristic) {
       traits.push('action.devices.traits.Brightness');
-    }
-    if (this.hap.config.combineSensors) {
-      const sensors = this.hap.sensors.sync(service);
-      traits = [...traits, ...sensors.traits];
-      attributes = {...attributes, ...sensors.attributes};
-      // console.log(service.serviceName, traits, attributes);
     }
 
     return this.createSyncData(service, {
@@ -39,7 +33,7 @@ export class Switch extends ghToHap implements ghToHap_t {
   }
 
   query(service: ServiceType) {
-    let response = {
+    const response = {
       on: !!service.serviceCharacteristics.find(x => x.uuid === Characteristic.On).value,
       online: true,
     } as any;
@@ -49,13 +43,8 @@ export class Switch extends ghToHap implements ghToHap_t {
     if (service.type === 'Switch' && brightnessCharacteristic) {
       response.brightness = brightnessCharacteristic.value;
     }
-    if (this.hap.config.combineSensors) {
-      const sensors = this.hap.sensors.query(service);
-      response = {...response, ...sensors};
-      // console.log(service.serviceName, response);
-    }
 
-    return response;
+    return this.createQueryData(service, response);
   }
 
   async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {

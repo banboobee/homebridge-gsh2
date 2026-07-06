@@ -2,8 +2,12 @@ import { ServiceType } from '@homebridge/hap-client';
 import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 
 export abstract class ghToHap {
+  protected primaryService = {};
+  protected secondaryServices = {};
+  protected updateSyncResponse = {};
+  protected updateQueryResponse = {};
   protected createSyncData(service: ServiceType, typeTraits: any) {
-    return {
+    const response = {
       id: service.uniqueId,
       ...typeTraits,
       name: {
@@ -27,6 +31,15 @@ export abstract class ghToHap {
         instancePort: service.instance.port,
       },
     };
+    this.updateSyncResponse?.[service.uniqueId]?.(service, response);
+
+    return response;
+  }
+
+  protected createQueryData(service: ServiceType, response: any) {
+    this.updateQueryResponse?.[service.uniqueId]?.(service, response);
+
+    return response;
   }
 }
 

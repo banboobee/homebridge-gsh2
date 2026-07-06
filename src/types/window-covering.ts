@@ -13,19 +13,12 @@ export class WindowCovering extends ghToHap implements ghToHap_t {
   }
 
   sync(service: ServiceType) {
-    let traits = [
+    const traits = [
       'action.devices.traits.OpenClose',
     ];
-    let attributes = {
+    const attributes = {
       openDirection: ['UP', 'DOWN'],
     };
-
-    if (this.hap.config.combineSensors) {
-      const sensors = this.hap.sensors.sync(service);
-      traits = [...traits, ...sensors.traits];
-      attributes = {...attributes, ...sensors.attributes};
-      // console.log(service.serviceName, traits, attributes);
-    }
 
     return this.createSyncData(service, {
       type: 'action.devices.types.BLINDS',
@@ -35,18 +28,13 @@ export class WindowCovering extends ghToHap implements ghToHap_t {
   }
 
   query(service: ServiceType) {
-    let response = {
+    const response = {
       on: true,
       online: true,
       openPercent: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentPosition).value,
     };
-    if (this.hap.config.combineSensors) {
-      const sensors = this.hap.sensors.query(service);
-      response = {...response, ...sensors};
-      // console.log(service.serviceName, response);
-    }
 
-    return response;
+    return this.createQueryData(service, response);
   }
 
   async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
