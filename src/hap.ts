@@ -345,12 +345,16 @@ export class Hap {
 
     for (const device of devices) {
       const service = this.services.find(x => x.uniqueId === device.id);
+      response[device.id] = {};
       if (service) {
         await this.getStatus(service);
-        const {id, ...query} = this.types[service.type].query(service);
-        response[device.id] = id ? {} : query;	// skip slave sensors, just in case.
-      } else {
-        response[device.id] = {};
+        const {id, ...update} = this.types[service.type].query(service);
+        if (id) {
+          const target = this.services.find(x => x.uniqueId === id);
+          this.log.error(`Unexpected query response ${target.serviceName} instead of ${service.serviceName}. ${update}`);
+          continue;
+        }
+        response[device.id] = update;
       }
     }
 
@@ -573,9 +577,11 @@ export class Hap {
       if (!this.types?.[service.type]?.query) {
         continue;
       }
-      const {id, ...query} = this.types[service.type].query(service);
-      states[id ?? service.uniqueId] = query;	// switch to representative if slave sensor
-      // console.log('processPendingStateReports', service.serviceName, query, id);
+      const {id = service.uniqueId, ...response} = this.types[service.type].query(service);
+      // response['target'] = this.services.find(x => x.uniqueId === id).serviceName;
+      // response['origin'] = service.serviceName;
+      // console.log(response);
+      states[id] = response;	// secondary service responses will be overwritten to take latest one.
     }
 
     return await this.sendStateReport(states);
@@ -591,10 +597,16 @@ export class Hap {
     this.services.filter((service) => 
       this.types?.[service.type]?.query,
     ).map((service) => {
-      const {id, ...query} = this.types[service.type].query(service);
-      if (!id) {	// skip slave sensors
-        states[service.uniqueId] = query;
+      const {id, ...update} = this.types[service.type].query(service);
+      if (id) {
+	// update['target'] = this.services.find(x => x.uniqueId === id).serviceName;
+	// update['origin'] = service.serviceName;
+	// update['type'] = service.type;
+	this.log.debug(`Removed secondary service ${service.serviceName} from full query response. ${JSON.stringify(update, null, 2)}`);
+	return;
       }
+      // update['target'] = service.serviceName;
+      states[service.uniqueId] = update;
     });
     return await this.sendStateReport(states);
   }

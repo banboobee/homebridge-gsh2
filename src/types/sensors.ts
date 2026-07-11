@@ -1,4 +1,4 @@
-import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
+import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
 import { Hap } from '../hap';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
@@ -12,6 +12,19 @@ export class Sensor extends ghToHap implements ghToHap_t {
 
   private syncing = true;
 
+  private unsupportedPrimaryServiceTypes = [
+    'Door',
+    'Fan',
+    'Fanv2',
+    'GarageDoorOpener',
+    'HeaterCooler',
+    'Lightbulb',
+    'SecuritySystem',
+    'Television',
+    'Thermostat',
+    'Window',
+  ];
+
   sync(service: ServiceType): SmartHomeV1SyncDevices | undefined {
     if (this.syncing === false) {       // switch to syncing
       this.primaryService = {};
@@ -22,11 +35,16 @@ export class Sensor extends ghToHap implements ghToHap_t {
       const services = this.hap.services.filter(x => x.aid === service.aid && x.instance.username === service.instance.username) ?? [];
       const primaryService = services
         .filter(x => Object.keys(this.hap.types).includes(x.type))
-        .filter(x => !this.hap.sensorServices.includes(x.type))?.[0];
+        .filter(x => !this.hap.sensorServices.includes(x.type))
+        .filter(x => !this.unsupportedPrimaryServiceTypes.includes(x.type))?.[0]; // select first one.
+      const unsupported = services.find(x => this.unsupportedPrimaryServiceTypes.includes(x.type));
+      if (unsupported) {
+        this.hap.log.error(`Unsupported service type ${unsupported.type} to combine sensor services. ${unsupported.serviceName}`);
+      }
       let primarySensor = undefined;
 
       Object.keys(this.hap.sensorTypes).forEach(sensor => {
-        const sensorService = services.filter(x => x.type === sensor)?.[0];
+        const sensorService = services.find(x => x.type === sensor); // select first one.
         if (sensorService) {
           if (sensorService.type === 'ContactSensor' && primaryService?.type === 'WindowCovering') {
             this.hap.log.error(`Unable to combine ${sensorService.serviceName} due to conflicting traits. ${service.serviceName}`);
@@ -36,11 +54,11 @@ export class Sensor extends ghToHap implements ghToHap_t {
             primarySensor = sensorService;
             this.secondaryServices[primarySensor.uniqueId] = [];
             if (primaryService) {
-              // console.log('primaryService:', primaryService.serviceName, ',type:', primaryService.type, ',primarySensor:', primarySensor.serviceName, ',type:', sensorService.type);
-              this.primaryService[primarySensor.uniqueId] = primaryService.uniqueId;
-              this.hap.types[primaryService.type].secondaryServices[primaryService.uniqueId] = [primarySensor];
+              this.primaryService[primarySensor.uniqueId] = primaryService;
+              this.hap.types[primaryService.type].secondaryServices[primaryService.uniqueId] = primarySensor;
+	      // primarySensor is not evaluated but its secondary services will be evaluated in the hook functions.
               this.hap.types[primaryService.type].updateSyncResponse[primaryService.uniqueId] = (primary, response) => {
-                const secondary = this.hap.types[primary.type].secondaryServices[primary.uniqueId]?.[0];
+                const secondary = this.hap.types[primary.type].secondaryServices[primary.uniqueId];
                 if (secondary) {
                   this.syncSecondaries(secondary, response);
                   // console.log('primaryService:', primary.serviceName, ',secondaryService:', secondary.serviceName, ',sync:', response);
@@ -48,14 +66,13 @@ export class Sensor extends ghToHap implements ghToHap_t {
                 return response;
               };
               this.hap.types[primaryService.type].updateQueryResponse[primaryService.uniqueId] = (primary, response) => {
-                const secondary = this.hap.types[primary.type].secondaryServices[primary.uniqueId]?.[0];
+                const secondary = this.hap.types[primary.type].secondaryServices[primary.uniqueId];
                 if (secondary) {
                   this.querySecondaries(secondary, response);
                   // console.log('primaryService:', primary.serviceName, ',secondaryService:', secondary.serviceName, ',query:', response);
                 }
                 return response;
               };
-              // console.log(this.hap.types[primaryService.type]);
             }
             this.updateSyncResponse[primarySensor.uniqueId] = (primary, response) => {
               this.syncSecondaries(primary, response);
@@ -66,7 +83,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
               return response;
             };
           } else {
-            this.primaryService[sensorService.uniqueId] = primarySensor.uniqueId;
+            this.primaryService[sensorService.uniqueId] = primarySensor;
           }
           // console.log('type:', service.type, ',primary:', primarySensor.serviceName, ',secondary:', sensorService.type);
           this.secondaryServices[primarySensor.uniqueId].push(sensorService);
@@ -102,9 +119,9 @@ export class Sensor extends ghToHap implements ghToHap_t {
 
     const primary = this.primaryService[service.uniqueId];
     if (primary) {
-      const primaryService = this.hap.services.find(x => x.uniqueId === primary);
-      const primaryResponse = this.hap.types[primaryService.type].query(primaryService);
-      primaryResponse['id'] = primary;
+      // secondary sensor services will be visited twice if non-sensor primary service.
+      const primaryResponse = this.hap.types[primary.type].query(primary);
+      primaryResponse['id'] ??= primary.uniqueId;	// keep top most service.
       
       return primaryResponse;
     }
