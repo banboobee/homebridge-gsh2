@@ -285,8 +285,22 @@ export class Hap {
     const devices = this.services.filter((service) =>
       this.types?.[service.type]?.sync,
     ).reduce((response, service) => {
-      const sync = this.types[service.type].sync(service);
-      return sync ? [...response, sync] : response;
+      const update = this.types[service.type].sync(service);
+      if (!update) {
+        return response;
+      }
+      const existing = response.find(x => x.id === update.id);
+      if (existing) {
+        // Primary non-sensor service combing sensors will include whole
+        // sensor properties while the original includes itself only.
+        // The prior one is what we want but the order is unpredictable.
+        // So uniquify them and overwrite the existing one.
+        existing.traits = [...new Set([...existing.traits, ...update.traits])];
+        existing.attributes = {...existing.attributes, ...update.attributes};
+        // console.log('updated sync response.', service.serviceName, existing);
+        return response;
+      }
+      return [...response, update];
     }, []);
     // console.log(devices);
     // console.log(devices.length);
@@ -483,9 +497,6 @@ export class Hap {
             .digest('hex'),
         };
       });      // The embeded uniqueId formula is different with Hap Client
-      services.sort((a, b) => {
-        return this.sensorTypes[a.type] && !this.sensorTypes[b.type] ? -1 : 0;
-      });
       this.log.debug(`Returned ${services.length} accessories from Homebridge - post filter`);
 
       const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update
@@ -577,11 +588,13 @@ export class Hap {
       if (!this.types?.[service.type]?.query) {
         continue;
       }
+      // May have two indivisual responses from non-sensor primary
+      // service of Sensors and its original. Merge them if both.
       const {id = service.uniqueId, ...response} = this.types[service.type].query(service);
       // response['target'] = this.services.find(x => x.uniqueId === id).serviceName;
       // response['origin'] = service.serviceName;
       // console.log(response);
-      states[id] = response;	// secondary service responses will be overwritten to take latest one.
+      states[id] = {...states[id], ...response};
     }
 
     return await this.sendStateReport(states);
@@ -597,16 +610,13 @@ export class Hap {
     this.services.filter((service) => 
       this.types?.[service.type]?.query,
     ).map((service) => {
-      const {id, ...update} = this.types[service.type].query(service);
-      if (id) {
-	// update['target'] = this.services.find(x => x.uniqueId === id).serviceName;
-	// update['origin'] = service.serviceName;
-	// update['type'] = service.type;
-	this.log.debug(`Removed secondary service ${service.serviceName} from full query response. ${JSON.stringify(update, null, 2)}`);
-	return;
-      }
-      // update['target'] = service.serviceName;
-      states[service.uniqueId] = update;
+      // Two indivisual responses from non-sensor primary
+      // service of Sensors and its original. Unify them.
+      const {id = service.uniqueId, ...update} = this.types[service.type].query(service);
+      // update['target'] = this.services.find(x => x.uniqueId === id).serviceName;
+      // update['origin'] = service.serviceName;
+      // update['type'] = this.services.find(x => x.uniqueId === id).type;
+      states[id] = {...states[id], ...update};
     });
     return await this.sendStateReport(states);
   }

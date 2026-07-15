@@ -56,7 +56,7 @@ export class LockMechanism extends ghToHap implements ghToHap_t {
       }
     }
 
-    return this.createQueryData(service, response);
+    return response;
   }
 
   async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {

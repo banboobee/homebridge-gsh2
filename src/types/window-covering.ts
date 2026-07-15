@@ -34,7 +34,7 @@ export class WindowCovering extends ghToHap implements ghToHap_t {
       openPercent: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentPosition).value,
     };
 
-    return this.createQueryData(service, response);
+    return response;
   }
 
   async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {
