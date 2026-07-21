@@ -15,7 +15,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
   private syncing = true;
 
   sync(service: ServiceType): SmartHomeV1SyncDevices | undefined {
-    let response = {
+    const response = {
       type: 'action.devices.types.SENSOR',
       traits: [],
       attributes: {},
@@ -45,6 +45,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
             this.secondaryServices[primarySensor.uniqueId] = [];
             if (primaryService) {
               this.primaryService[primarySensor.uniqueId] = primaryService;
+              this.hap.types[primaryService.type].secondaryServices[primaryService.uniqueId] = [primarySensor];
             }
           } else {
             this.primaryService[sensorService.uniqueId] = primarySensor;
@@ -58,10 +59,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
       return undefined;
     }
 
-    const primary = this.primaryService[service.uniqueId];
-    if (primary) {
-      response = this.hap.types[primary.type].sync(primary);
-    }
+    const primary = this.primaryService[service.uniqueId]; // non-sensor primary service
     this.secondaryServices[service.uniqueId]?.forEach(sensor => {
       const update = this.hap.sensorTypes[sensor.type].sync(sensor);
       response.traits = [...response.traits, ...update.traits];
@@ -79,9 +77,13 @@ export class Sensor extends ghToHap implements ghToHap_t {
     } as any;
 
     const primary = this.primaryService[service.uniqueId];
-    if (primary) {
+    if (Object.keys(this.hap.sensorTypes).includes(primary?.type)) {
+      // redirect to primary sensor service
       response = this.hap.types[primary.type].query(primary);
-      response['id'] ??= primary.uniqueId;	// keep top most service.
+    }
+    if (primary) {
+      // keep top most primary service
+      response['id'] ??= primary.uniqueId;
     }
     this.secondaryServices[service.uniqueId]?.forEach(sensor => {
       const update = this.hap.sensorTypes[sensor.type].query(sensor);

@@ -155,6 +155,46 @@ export class Hap {
     config.instanceBlacklist = config.instanceDenylist || [];
 
     if (config.combineSensors) {
+      Object.keys(this.types).forEach(type => {
+        if (this.types[type] === this.dummy) {
+          return;
+        }
+        this.types[type] = new class extends this.types[type].constructor {
+          private primaryService = {};
+          private secondaryServices = {};
+          private types;
+          
+          constructor(hap) {
+            super(hap);
+            this.types = hap.types;
+          }
+
+          sync(service) {
+            const response = super.sync(service);
+            this.secondaryServices[service.uniqueId]?.forEach(secondary => {
+              const update = this.types[secondary.type].sync(secondary);
+              response.traits = [...response.traits, ...update.traits];
+              response.attributes = {...response.attributes, ...update.attributes};
+            });
+            // console.log(service.serviceName, secondary.serviceName, response);
+            return response;
+          }
+
+          query(service) {
+            const response = super.query(service);
+            this.secondaryServices[service.uniqueId]?.forEach(secondary => {
+              const update = this.types[secondary.type].query(secondary);
+              Object.assign(response, update);
+            });
+            return response;
+          }
+
+          exec(service, command) {
+            return super.exec(service, command);
+          }
+        }(this);
+      });
+    
       for (const service of this.sensorServices) {
         this.sensorTypes[service] = this.types[service];
         this.types[service] = this.sensors;
@@ -295,6 +335,7 @@ export class Hap {
         // sensor properties while the original includes itself only.
         // The prior one is what we want but the order is unpredictable.
         // So uniquify them and overwrite the existing one.
+        existing.type = update.id === service.uniqueId ? update.type : existing.type; 
         existing.traits = [...new Set([...existing.traits, ...update.traits])];
         existing.attributes = {...existing.attributes, ...update.attributes};
         // console.log('updated sync response.', service.serviceName, existing);
@@ -497,6 +538,9 @@ export class Hap {
             .digest('hex'),
         };
       });      // The embeded uniqueId formula is different with Hap Client
+      // services.sort((a, b) => {
+      //   return this.sensorTypes[a.type] && !this.sensorTypes[b.type] ? -1 : 0;
+      // });
       this.log.debug(`Returned ${services.length} accessories from Homebridge - post filter`);
 
       const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update
