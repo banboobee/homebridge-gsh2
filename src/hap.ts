@@ -172,18 +172,17 @@ export class Hap {
           sync(service) {
             const response = super.sync(service);
             this.secondaryServices[service.uniqueId]?.forEach(secondary => {
-              const update = this.types[secondary.type].sync(secondary);
+              const update = this.types[secondary.type].sync(secondary, response);
               response.traits = [...response.traits, ...update.traits];
               response.attributes = {...response.attributes, ...update.attributes};
             });
-            // console.log(service.serviceName, secondary.serviceName, response);
             return response;
           }
 
           query(service) {
             const response = super.query(service);
             this.secondaryServices[service.uniqueId]?.forEach(secondary => {
-              const update = this.types[secondary.type].query(secondary);
+              const update = this.types[secondary.type].query(secondary, response);
               Object.assign(response, update);
             });
             return response;
@@ -329,16 +328,11 @@ export class Hap {
       if (!update) {
         return response;
       }
-      const existing = response.find(x => x.id === update.id);
-      if (existing) {
-        // Primary non-sensor service combing sensors will include whole
-        // sensor properties while the original includes itself only.
-        // The prior one is what we want but the order is unpredictable.
-        // So uniquify them and overwrite the existing one.
-        existing.type = update.id === service.uniqueId ? update.type : existing.type; 
-        existing.traits = [...new Set([...existing.traits, ...update.traits])];
-        existing.attributes = {...existing.attributes, ...update.attributes};
-        // console.log('updated sync response.', service.serviceName, existing);
+      const ix = response.findIndex(x => x.id === update.id);
+      if (ix > -1) {
+	// sensors service might rebuild non-sensor primary service response.
+        // console.log('updated sync response.', service.serviceName, update);
+	response[ix] = update;
         return response;
       }
       return [...response, update];
@@ -538,9 +532,6 @@ export class Hap {
             .digest('hex'),
         };
       });      // The embeded uniqueId formula is different with Hap Client
-      // services.sort((a, b) => {
-      //   return this.sensorTypes[a.type] && !this.sensorTypes[b.type] ? -1 : 0;
-      // });
       this.log.debug(`Returned ${services.length} accessories from Homebridge - post filter`);
 
       const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update
@@ -632,13 +623,12 @@ export class Hap {
       if (!this.types?.[service.type]?.query) {
         continue;
       }
-      // May have two indivisual responses from non-sensor primary
-      // service of Sensors and its original. Merge them if both.
+      // sensors service might respond as a non-sensor primary service.
       const {id = service.uniqueId, ...response} = this.types[service.type].query(service);
       // response['target'] = this.services.find(x => x.uniqueId === id).serviceName;
       // response['origin'] = service.serviceName;
       // console.log(response);
-      states[id] = {...states[id], ...response};
+      states[id] = response;
     }
 
     return await this.sendStateReport(states);
@@ -654,13 +644,11 @@ export class Hap {
     this.services.filter((service) => 
       this.types?.[service.type]?.query,
     ).map((service) => {
-      // Two indivisual responses from non-sensor primary
-      // service of Sensors and its original. Unify them.
+      // sensors service might respond as a non-sensor primary service.
       const {id = service.uniqueId, ...update} = this.types[service.type].query(service);
       // update['target'] = this.services.find(x => x.uniqueId === id).serviceName;
       // update['origin'] = service.serviceName;
-      // update['type'] = this.services.find(x => x.uniqueId === id).type;
-      states[id] = {...states[id], ...update};
+      states[id] = update;
     });
     return await this.sendStateReport(states);
   }

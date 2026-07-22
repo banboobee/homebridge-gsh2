@@ -14,7 +14,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
   private secondaryServices = {};
   private syncing = true;
 
-  sync(service: ServiceType): SmartHomeV1SyncDevices | undefined {
+  sync(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices): SmartHomeV1SyncDevices | undefined {
     const response = {
       type: 'action.devices.types.SENSOR',
       traits: [],
@@ -60,6 +60,11 @@ export class Sensor extends ghToHap implements ghToHap_t {
     }
 
     const primary = this.primaryService[service.uniqueId]; // non-sensor primary service
+    if (primary && !primaryResponse) {
+      // upward traversal to find a root node.
+      return this.hap.types[primary.type].sync(primary); // responds as root node.
+    }
+    // root node or received the response from root node. collect secondary responses.
     this.secondaryServices[service.uniqueId]?.forEach(sensor => {
       const update = this.hap.sensorTypes[sensor.type].sync(sensor);
       response.traits = [...response.traits, ...update.traits];
@@ -70,21 +75,20 @@ export class Sensor extends ghToHap implements ghToHap_t {
     return this.createSyncData(primary ?? service, response);
   }
 
-  query(service: ServiceType) {
+  query(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices) {
     this.syncing = false;       // switch to query
     let response = {
       online: true,
     } as any;
 
     const primary = this.primaryService[service.uniqueId];
-    if (Object.keys(this.hap.sensorTypes).includes(primary?.type)) {
-      // redirect to primary sensor service
+    if (primary && !primaryResponse) {
+      // upward traversal to find a root node
       response = this.hap.types[primary.type].query(primary);
+      response['id'] ??= primary.uniqueId; // responds as root node.
+      return response;
     }
-    if (primary) {
-      // keep top most primary service
-      response['id'] ??= primary.uniqueId;
-    }
+    // root node or received the response from root node. collect secondary responses.
     this.secondaryServices[service.uniqueId]?.forEach(sensor => {
       const update = this.hap.sensorTypes[sensor.type].query(sensor);
       Object.assign(response, update);
