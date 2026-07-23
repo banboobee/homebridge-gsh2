@@ -55,6 +55,8 @@ export class Sensor extends ghToHap implements ghToHap_t {
         }
       });
     }
+    // non-sensor primary service might respond earlier without sensor properties.
+    // Create the response to overwrite it.
     if (Object.keys(this.hap.sensorTypes).includes(this.primaryService[service.uniqueId]?.type)) {
       return undefined;
     }
@@ -64,7 +66,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
       // upward traversal to find a root node.
       return this.hap.types[primary.type].sync(primary); // responds as root node.
     }
-    // root node or received the response from root node. collect secondary responses.
+    // root node or received root node response. collect secondary responses.
     this.secondaryServices[service.uniqueId]?.forEach(sensor => {
       const update = this.hap.sensorTypes[sensor.type].sync(sensor);
       response.traits = [...response.traits, ...update.traits];
@@ -72,7 +74,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
     });
     // console.log(response);
 
-    return this.createSyncData(primary ?? service, response);
+    return this.createSyncData(service, response);
   }
 
   query(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices) {
@@ -88,7 +90,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
       response['id'] ??= primary.uniqueId; // responds as root node.
       return response;
     }
-    // root node or received the response from root node. collect secondary responses.
+    // root node or received root node response. collect secondary responses.
     this.secondaryServices[service.uniqueId]?.forEach(sensor => {
       const update = this.hap.sensorTypes[sensor.type].query(sensor);
       Object.assign(response, update);

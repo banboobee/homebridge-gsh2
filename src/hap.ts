@@ -330,9 +330,9 @@ export class Hap {
       }
       const ix = response.findIndex(x => x.id === update.id);
       if (ix > -1) {
-	// sensors service might rebuild non-sensor primary service response.
+        // sensors service might rebuild non-sensor primary service response.
         // console.log('updated sync response.', service.serviceName, update);
-	response[ix] = update;
+        response[ix] = update;
         return response;
       }
       return [...response, update];
