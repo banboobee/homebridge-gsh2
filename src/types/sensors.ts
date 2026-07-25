@@ -38,6 +38,12 @@ export class Sensor extends ghToHap implements ghToHap_t {
         if (sensorService) {
           if (sensorService.type === 'ContactSensor' && primaryService?.type === 'WindowCovering') {
             this.hap.log.error(`Unable to combine ${sensorService.serviceName} due to conflicting traits. ${service.serviceName}`);
+            this.secondaryServices[sensorService.uniqueId] = [sensorService];
+            return;
+          }
+          if (sensorService.type === 'ContactSensor' && primaryService?.type === 'Window') {
+            this.hap.log.error(`Unable to combine ${sensorService.serviceName} due to conflicting traits. ${service.serviceName}`);
+            this.secondaryServices[sensorService.uniqueId] = [sensorService];
             return;
           }
           if (primarySensor === undefined) {
