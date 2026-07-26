@@ -57,11 +57,13 @@ describe('combine sensors', () => {
       ];
       let response: any;
       
-      response = sensors.sync(batteryTemp);
+      response = hap.types[batteryTemp.type].sync(batteryTemp);
       expect(response).not.toBeDefined();
-      response = sensors.sync(humiditySensorTemp);
+      
+      response = hap.types[humiditySensorTemp.type].sync(humiditySensorTemp);
       expect(response).not.toBeDefined();
-      response = sensors.sync(temperatureSensorTemp);
+      
+      response = hap.types[temperatureSensorTemp.type].sync(temperatureSensorTemp);
       expect(response).toBeDefined();
       expect(response.id).toBe(temperatureSensorTemp.uniqueId);
       expect(response.type).toBe('action.devices.types.SENSOR');
@@ -79,8 +81,21 @@ describe('combine sensors', () => {
   });
   describe('query message', () => {
     it('sensors combine', async () => {
-      const response = sensors.query(batteryTemp);
+      let response: any;
+      
+      response = hap.types[batteryTemp.type].query(batteryTemp);
       expect(response).toBeDefined();
+      expect(response.id).toBe(temperatureSensorTemp.uniqueId);
+      expect(response.temperatureSetpointCelsius).toBeDefined();
+      expect(response.temperatureAmbientCelsius).toBeDefined();
+      expect(response.humidityAmbientPercent).toBeDefined();
+      expect(response.descriptiveCapacityRemaining).toBeDefined();
+      expect(response.capacityRemaining).toBeDefined();
+      expect(response.online).toBeDefined();
+      
+      response = hap.types[temperatureSensorTemp.type].query(temperatureSensorTemp);
+      expect(response).toBeDefined();
+      expect(response.id).not.toBeDefined();
       expect(response.temperatureSetpointCelsius).toBeDefined();
       expect(response.temperatureAmbientCelsius).toBeDefined();
       expect(response.humidityAmbientPercent).toBeDefined();
@@ -91,7 +106,7 @@ describe('combine sensors', () => {
   });
   describe('execute message', () => {
     it('sensors ', async () => {
-      const response = await sensors.execute(batteryTemp, commandOnOff);
+      const response = await hap.types[batteryTemp.type].execute(batteryTemp, commandOnOff);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
       expect(response.status).toBe('ERROR');
@@ -104,12 +119,14 @@ describe('combine sensors', () => {
       
       response = hap.types[switchTemp.type].sync(switchTemp);
       expect(response).toBeDefined();
+      expect(response.id).toBe(switchTemp.uniqueId);
       expect(response.type).toBe('action.devices.types.SWITCH');
       expect(response.traits).toContain('action.devices.traits.OnOff');
       expect(response.traits).not.toContain('action.devices.traits.OccupancySensing');
 
-      response = sensors.sync(motionSensorTemp);
+      response = hap.types[motionSensorTemp.type].sync(motionSensorTemp);
       expect(response).toBeDefined();
+      expect(response.id).toBe(switchTemp.uniqueId);
       expect(response.type).toBe('action.devices.types.SWITCH');
       expect(response.traits).toContain('action.devices.traits.OnOff');
       expect(response.traits).toContain('action.devices.traits.OccupancySensing');
@@ -119,6 +136,7 @@ describe('combine sensors', () => {
 
       response = hap.types[switchTemp.type].sync(switchTemp);
       expect(response).toBeDefined();
+      expect(response.id).toBe(switchTemp.uniqueId);
       expect(response.type).toBe('action.devices.types.SWITCH');
       expect(response.traits).toContain('action.devices.traits.OnOff');
       expect(response.traits).toContain('action.devices.traits.OccupancySensing');
@@ -131,7 +149,7 @@ describe('combine sensors', () => {
     it('sensors with switch', async () => {
       let response: any;
       
-      response = sensors.query(motionSensorTemp);
+      response = hap.types[motionSensorTemp.type].query(motionSensorTemp);
       expect(response).toBeDefined();
       expect(response.id).toBe(switchTemp.uniqueId);
       expect(response.on).toBeDefined();
@@ -141,7 +159,7 @@ describe('combine sensors', () => {
 
       response = hap.types[switchTemp.type].query(switchTemp);
       expect(response).toBeDefined();
-      expect(response.id).not.toBe(switchTemp.uniqueId);
+      expect(response.id).not.toBeDefined();
       expect(response.on).toBeDefined();
       expect(response.occupancy).toBeDefined();
       expect(response.occupancy).toMatch(/^(OCCUPIED|UNOCCUPIED)$/);
@@ -153,16 +171,16 @@ describe('combine sensors', () => {
     it('sensors conflicting traits', async () => {
       let response: any;
       
-      response = sensors.sync(contactSensorTemp);
+      response = hap.types[contactSensorTemp.type].sync(contactSensorTemp);
       expect(response).toBeDefined();
-      expect(response.type).toBe('action.devices.types.SENSOR');
       expect(response.id).toBe(contactSensorTemp.uniqueId);
+      expect(response.type).toBe('action.devices.types.SENSOR');
       expect(response.traits).toContain('action.devices.traits.OpenClose');
 
       response = hap.types[windowCoveringTemp.type].sync(windowCoveringTemp);
       expect(response).toBeDefined();
-      expect(response.type).toBe('action.devices.types.WINDOW');
       expect(response.id).toBe(windowCoveringTemp.uniqueId);
+      expect(response.type).toBe('action.devices.types.WINDOW');
       expect(response.traits).toContain('action.devices.traits.OpenClose');
     });
   });
@@ -170,7 +188,7 @@ describe('combine sensors', () => {
     it('sensors conflicting traits', async () => {
       let response: any;
       
-      response = sensors.query(contactSensorTemp);
+      response = hap.types[contactSensorTemp.type].query(contactSensorTemp);
       expect(response).toBeDefined();
       expect(response.id).not.toBeDefined();
       expect(response.openPercent).toBeDefined();
