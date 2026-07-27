@@ -234,7 +234,7 @@ export class Hap {
     });
 
     this.cachedInstances =
-      Object.keys(this.plugin.platform.accessory.context.latestSync).reduce((x, y) => {
+      Object.keys(this.plugin.platform?.accessory.context.latestSync ?? []).reduce((x, y) => {
         const sync = this.plugin.platform.accessory.context.latestSync[y]?.sync;
         if (!x.find(instance => instance === sync?.customData?.instanceUsername)) {
           x.push(sync?.customData.instanceUsername);
@@ -340,27 +340,29 @@ export class Hap {
     // console.log(devices);
     // console.log(devices.length);
 
-    const latestSync: Record<string, any> = this.plugin.platform.accessory.context.latestSync;
-    // console.log(`caching ${Object.keys(latestSync).length} devices.`);
-    for (const x of devices) {          // update sync response
-      latestSync[x.id].sync = x;
-    }
-    for (const x of Object.values(latestSync)) {
-      if (!x.unavailable && !devices.find(y => x.sync.id === y.id)) {
-        if (x.sync.traits) {    // disables pre-merged/unmerged sensors.
-          const sync = x.sync;
-          const {id, type, traits, ..._sync} = sync;
-          x.sync = {
-            id: id,
-            type: type,
-            _traits: traits, 
-            ..._sync,
-          };
-        }
+    const latestSync: Record<string, any> = this.plugin.platform?.accessory.context.latestSync;
+    if (latestSync) {
+      // console.log(`caching ${Object.keys(latestSync).length} devices.`);
+      for (const x of devices) {          // update sync response
+        latestSync[x.id].sync = x;
       }
-      if (x.unavailable && x.sync?.traits) {    // keep as zombie device
-        devices.push(x.sync);
-        // console.log(x);
+      for (const x of Object.values(latestSync)) {
+        if (!x.unavailable && !devices.find(y => x.sync.id === y.id)) {
+          if (x.sync.traits) {    // disables pre-merged/unmerged sensors.
+            const sync = x.sync;
+            const {id, type, traits, ..._sync} = sync;
+            x.sync = {
+              id: id,
+              type: type,
+              _traits: traits, 
+              ..._sync,
+            };
+          }
+        }
+        if (x.unavailable && x.sync?.traits) {    // keep as zombie device
+          devices.push(x.sync);
+          // console.log(x);
+        }
       }
     }
     // console.log(devices);
@@ -535,36 +537,38 @@ export class Hap {
       this.log.debug(`Returned ${services.length} accessories from Homebridge - post filter`);
 
       const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update
-      const latestSync: Record<string, any> = this.plugin.platform.accessory.context.latestSync;
-      for (const x of Object.values(latestSync)) {
-        x.unavailable++;
-      }
-      for (const x of services) {
-        if (!this.types?.[x.type]?.sync) {      // speaker, inputSource...
-          continue;
+      const latestSync: Record<string, any> = this.plugin.platform?.accessory.context.latestSync;
+      if (latestSync) {
+        for (const x of Object.values(latestSync)) {
+          x.unavailable++;
         }
-        if (!latestSync[x.uniqueId]) {          // new device
-          this.log.debug(`Found new accessory '${x.serviceName}'. aid:${x.aid}, iid:${x.iid}, username:${x.instance.username}`);
-          latestSync[x.uniqueId] = {		// save original for future removal
-            sync: {
-              id: x.uniqueId,
-              name: {
-                name: x.serviceName,
+        for (const x of services) {
+          if (!this.types?.[x.type]?.sync) {      // speaker, inputSource...
+            continue;
+          }
+          if (!latestSync[x.uniqueId]) {          // new device
+            this.log.debug(`Found new accessory '${x.serviceName}'. aid:${x.aid}, iid:${x.iid}, username:${x.instance.username}`);
+            latestSync[x.uniqueId] = {          // save original for future removal
+              sync: {
+                id: x.uniqueId,
+                name: {
+                  name: x.serviceName,
+                },
+                customData: {
+                  aid: x.aid,
+                  iid: x.iid,
+                  instanceUsername: x.instance.username,
+                },
               },
-              customData: {
-                aid: x.aid,
-                iid: x.iid,
-                instanceUsername: x.instance.username,
-              },
-            },
-            unavailable: 0,
-          };
-        } else {                                // consistent device
-          latestSync[x.uniqueId].unavailable = 0;
+              unavailable: 0,
+            };
+          } else {                                // consistent device
+            latestSync[x.uniqueId].unavailable = 0;
+          }
         }
       }
       this.unavailableServiceCount = 0;
-      for (const x of Object.keys(latestSync)) {
+      for (const x of Object.keys(latestSync ?? [])) {
         if (!latestSync[x]?.unavailable) {	// consistent or wrong record
           continue;
         }
