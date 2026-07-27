@@ -39,9 +39,7 @@ const pluginMock = new class {
   }
 };
 
-const hap = new Hap(socketMock, pluginMock, '031-45-154', config, {});
-
-const sensors = hap.sensors;
+const hap = new Hap(new socketMock, pluginMock, '031-45-154', config, {});
 
 describe('combine sensors', () => {
   describe('sync message', () => {
