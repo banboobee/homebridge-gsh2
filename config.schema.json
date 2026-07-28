@@ -96,9 +96,14 @@
         "maximum": 300
       },
       "enhancedSkip": {
-        "title": "<b>For 'appletv-enhanced', enable skip</b>",
+        "title": "For 'appletv-enhanced', enable skip",
         "type": "boolean",
-        "placeholder": false
+        "default": false
+      },
+      "combineSensors": {
+        "title": "Sensor services to combine",
+        "type": "boolean",
+        "default": false
       }
     }
   },
@@ -219,6 +224,11 @@
           "helpvalue": "<h5><B>Force Heater-Cooler devices to show as AC_UNIT</b></h5><em class='primary-text'>This makes heater cooler advertise as an air conditioning unit.</em>"
         },
         "showHeaterCoolerAsACUnit",
+        {
+          "type": "help",
+          "helpvalue": "<h5><B>Combine sensor services</b></h5><em class='primary-text'>Combines sensor servic(es) of an homebridge accessory, and expose to inside of non-sensor device if possible, or single device. This will help reduce the number of exposed google devices.</em>"
+        },
+        "combineSensors",
         {
           "type": "help",
             "helpvalue": "<h5><B>For 'appletv-enhanced', enable skip</b></h5><em class='primary-text'>This option will change the behaviour of the next or skip command of the 'appletv-enhanced' plugin, from skip to select.  This will enable the wording 'OK Google, tv skip' to press the select button on the Apple TV remote.  This is useful for skipping adds on YouTube.</em>"
