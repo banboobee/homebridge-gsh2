@@ -65,15 +65,15 @@ export class Hap {
     HeaterCooler: new HeaterCooler(this),
     HumiditySensor: new HumiditySensor(),
     Lightbulb: new Lightbulb(),
-    LockMechanism: new LockMechanism(this),
-    Outlet: new Switch(this),
+    LockMechanism: new LockMechanism(),
+    Outlet: new Switch(),
     SecuritySystem: new SecuritySystem(),
-    Switch: new Switch(this),
+    Switch: new Switch(),
     Television: new Television(this),
     TemperatureSensor: new TemperatureSensor(this),
     Thermostat: new Thermostat(this),
     Window: new Window(),
-    WindowCovering: new WindowCovering(this),
+    WindowCovering: new WindowCovering(),
     Speaker: this.dummy,
     InputSource: this.dummy,
     ContactSensor: new ContactSensor(),
@@ -173,8 +173,11 @@ export class Hap {
             const response = super.sync(service);
             this.secondaryServices[service.uniqueId]?.forEach(secondary => {
               const update = this.types[secondary.type].sync(secondary, response);
+              const attribute = {...response.attributes, ...update.attributes};
               response.traits = [...response.traits, ...update.traits];
-              response.attributes = {...response.attributes, ...update.attributes};
+              if (Object.keys(attribute).length > 0) {
+                response.attributes = attribute;
+              }
             });
             return response;
           }
