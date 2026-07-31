@@ -1,47 +1,7 @@
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
 import { Switch } from './switch';
 
-import { Hap } from '../hap';
-import { PluginConfig } from '../interfaces';
-
-import { Log } from '../logger';
-
-
-class socketMock {
-  on(event: string, callback: any) {
-    if (event === 'websocket-status') {
-      callback('websocket-status');
-    }
-    if (event === 'json') {
-      callback({ serverMessage: 'serverMessage' });
-    }
-  }
-
-  sendJson(data: any) {
-    // eslint-disable-next-line no-console
-    console.log('sendJson', data);
-  }
-}
-
-const config: PluginConfig = {
-  name: 'Google Smart Home',
-  token: '1234567890',
-  notice: 'Keep your token a secret!',
-  debug: false,
-  platform: 'google-smarthome',
-  twoFactorAuthPin: '123-456',
-};
-
-const pluginMock = new class {
-  log: Log;
-  constructor() {
-    this.log = new Log(console, true);
-  }
-};
-
-const hap = new Hap(socketMock, pluginMock, '031-45-154', config, {});
-
-const switchDevice = new Switch(hap);
+const switchDevice = new Switch();
 
 describe('switch', () => {
   describe('sync message', () => {

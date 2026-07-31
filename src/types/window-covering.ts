@@ -1,40 +1,28 @@
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
 export class WindowCovering extends ghToHap implements ghToHap_t {
-
-  constructor(
-    private hap: Hap,
-  ) {
-    super();
-  }
-
   sync(service: ServiceType) {
-    const traits = [
-      'action.devices.traits.OpenClose',
-    ];
-    const attributes = {
-      openDirection: ['UP', 'DOWN'],
-    };
 
     return this.createSyncData(service, {
       type: 'action.devices.types.BLINDS',
-      traits,
-      attributes,
+      traits: [
+        'action.devices.traits.OpenClose',
+      ],
+      attributes: {
+        openDirection: ['UP', 'DOWN'],
+      },
     });
   }
 
   query(service: ServiceType) {
-    const response = {
+    return {
       on: true,
       online: true,
       openPercent: service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentPosition).value,
     };
-
-    return response;
   }
 
   async execute(service: ServiceType, command: SmartHomeV1ExecuteRequestCommands): Promise<SmartHomeV1ExecuteResponseCommands> {

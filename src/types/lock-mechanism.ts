@@ -1,28 +1,17 @@
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
 export class LockMechanism extends ghToHap implements ghToHap_t {
   public twoFactorRequired = true;
 
-  constructor(
-    private hap: Hap,
-  ) {
-    super();
-  }
-
   sync(service: ServiceType) {
-    const traits = [
-      'action.devices.traits.LockUnlock',
-    ];
-    const attributes = {};
-
     return this.createSyncData(service, {
       type: 'action.devices.types.LOCK',
-      traits,
-      attributes,
+      traits: [
+        'action.devices.traits.LockUnlock',
+      ],
     });
   }
 

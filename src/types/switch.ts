@@ -1,23 +1,17 @@
 import { ServiceType } from '@homebridge/hap-client';
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands } from 'actions-on-google';
-import { Hap } from '../hap';
 import { Characteristic } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
 export class Switch extends ghToHap implements ghToHap_t {
 
-  constructor(
-    private hap: Hap,
-  ) {
-    super();
-  }
-
   sync(service: ServiceType) {
-    const type = service.type === 'Switch' ? 'action.devices.types.SWITCH' : 'action.devices.types.OUTLET';
+    const type = service.type === 'Switch' ?
+      'action.devices.types.SWITCH' :
+      'action.devices.types.OUTLET';
     const traits = [
       'action.devices.traits.OnOff',
     ];
-    const attributes = {};
 
     // check if the switch has the brightness characteristic
     const brightnessCharacteristic = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Brightness);
@@ -28,7 +22,6 @@ export class Switch extends ghToHap implements ghToHap_t {
     return this.createSyncData(service, {
       type,
       traits,
-      attributes,
     });
   }
 
