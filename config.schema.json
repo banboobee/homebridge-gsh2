@@ -101,7 +101,7 @@
         "default": false
       },
       "combineSensors": {
-        "title": "Sensor services to combine",
+        "title": "Sensor services to be combined (Experimental)",
         "type": "boolean",
         "default": false
       }
