@@ -6,7 +6,7 @@ import { Television } from './television';
 import { Log } from '../logger';
 
 
-class socketMock {
+const socketMock = new class {
   on(event: string, callback: any) {
     if (event === 'websocket-status') {
       callback('websocket-status');
@@ -20,7 +20,7 @@ class socketMock {
     // eslint-disable-next-line no-console
     console.log('sendJson', data);
   }
-}
+};
 
 const config: PluginConfig = {
   name: 'Google Smart Home',
