@@ -13,7 +13,7 @@ describe('lockMechanism', () => {
       expect(response.traits).toContain('action.devices.traits.LockUnlock');
       expect(response.traits).not.toContain('action.devices.traits.Brightness');
       expect(response.traits).not.toContain('action.devices.traits.ColorSetting');
-      // expect(response.attributes).not.toBeDefined();
+      expect(response.attributes).not.toBeDefined();
       expect(response.name).toBeDefined();
       // await sleep(10000)
     });
