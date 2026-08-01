@@ -1,7 +1,7 @@
 import { CharacteristicType, ServiceType } from '@homebridge/hap-client';
 import { Switch } from './switch';
 
-const switchDevice = new Switch('action.devices.types.SWITCH');
+const switchDevice = new Switch();
 
 describe('switch', () => {
   describe('sync message', () => {
