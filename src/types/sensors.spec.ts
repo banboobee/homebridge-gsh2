@@ -52,6 +52,8 @@ describe('combine sensors', () => {
         switchTemp,
         contactSensorTemp,
         windowCoveringTemp,
+        contactSensorTemp1,
+        contactSensorTemp2,
       ];
       let response: any;
       
@@ -202,6 +204,42 @@ describe('combine sensors', () => {
     });
   });
 
+  describe('sync message', () => {
+    it('sensors multiple instances', async () => {
+      let response: any;
+
+      response = hap.types[contactSensorTemp1.type].sync(contactSensorTemp1);
+      expect(response).toBeDefined();
+      expect(response.id).toBe(contactSensorTemp1.uniqueId);
+      expect(response.type).toBe('action.devices.types.SENSOR');
+      expect(response.traits).toContain('action.devices.traits.OpenClose');
+
+      response = hap.types[contactSensorTemp2.type].sync(contactSensorTemp2);
+      expect(response).toBeDefined();
+      expect(response.id).toBe(contactSensorTemp2.uniqueId);
+      expect(response.type).toBe('action.devices.types.SENSOR');
+      expect(response.traits).toContain('action.devices.traits.OpenClose');
+    });
+  });
+  describe('query message', () => {
+    it('sensors multiple instances', async () => {
+      let response: any;
+
+      response = hap.types[contactSensorTemp1.type].query(contactSensorTemp1);
+      expect(response).toBeDefined();
+      expect(response.id).not.toBeDefined();
+      expect(response.openPercent).toBeDefined();
+      expect(response.on).not.toBeDefined();
+      expect(response.online).toBeDefined();
+
+      response = hap.types[contactSensorTemp2.type].query(contactSensorTemp2);
+      expect(response).toBeDefined();
+      expect(response.id).not.toBeDefined();
+      expect(response.openPercent).toBeDefined();
+      expect(response.on).not.toBeDefined();
+      expect(response.online).toBeDefined();
+    });
+  });
 });
 
 const batteryTemp: ServiceType = {
@@ -545,7 +583,7 @@ const contactSensorTemp: ServiceType = {
   'uuid': '00000086-0000-1000-8000-0026BB765291',
   'type': 'ContactSensor',
   'humanType': 'Contact Sensor',
-  'serviceName': '',
+  'serviceName': 'Contact Sensor',
   'serviceCharacteristics': [
     {
       aid: 43,
@@ -591,6 +629,114 @@ const contactSensorTemp: ServiceType = {
     configurationNumber: 1,
   },
   'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248656',
+};
+
+const contactSensorTemp1: ServiceType = {
+  'aid': 53,
+  'iid': 13,
+  'uuid': '00000086-0000-1000-8000-0026BB765291',
+  'type': 'ContactSensor',
+  'humanType': 'Contact Sensor',
+  'serviceName': 'Contact Sensor1',
+  'serviceCharacteristics': [
+    {
+      aid: 53,
+      iid: 13,
+      uuid: '0000006A-0000-1000-8000-0026BB765291',
+      type: 'ContactSensorState',
+      serviceType: 'ContactSensor',
+      serviceName: 'Contact Sensor1',
+      description: 'Contact Sensor State',
+      value: 0,
+      format: 'uint8',
+      perms: [
+        'ev',
+        'pr',
+      ],
+      maxValue: 1,
+      minValue: 0,
+      minStep: 1,
+      canRead: true,
+      canWrite: false,
+      ev: true,
+    },
+  ],
+  accessoryInformation: {
+    'Manufacturer': 'NRCHKB',
+    'Model': '1.4.3',
+    'Name': 'Backyard',
+    'Serial Number': 'Default Serial Number',
+    'Firmware Revision': '1.4.3',
+    'Hardware Revision': '1.4.3',
+    'Software Revision': '1.4.3',
+  },
+  values: {
+    ContactSensorState: 0,
+  },
+  'instance': {
+    'name': 'Default Model',
+    'username': '69:62:B7:AE:38:D4',
+    'ipAddress': '192.168.1.11',
+    'port': 51830,
+    connectionFailedCount: 0,
+    services: [],
+    configurationNumber: 1,
+  },
+  'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248657',
+};
+
+const contactSensorTemp2: ServiceType = {
+  'aid': 53,
+  'iid': 14,
+  'uuid': '00000086-0000-1000-8000-0026BB765291',
+  'type': 'ContactSensor',
+  'humanType': 'Contact Sensor',
+  'serviceName': 'Contact Sensor2',
+  'serviceCharacteristics': [
+    {
+      aid: 53,
+      iid: 14,
+      uuid: '0000006A-0000-1000-8000-0026BB765291',
+      type: 'ContactSensorState',
+      serviceType: 'ContactSensor',
+      serviceName: '',
+      description: 'Contact Sensor State',
+      value: 0,
+      format: 'uint8',
+      perms: [
+        'ev',
+        'pr',
+      ],
+      maxValue: 1,
+      minValue: 0,
+      minStep: 1,
+      canRead: true,
+      canWrite: false,
+      ev: true,
+    },
+  ],
+  accessoryInformation: {
+    'Manufacturer': 'NRCHKB',
+    'Model': '1.4.3',
+    'Name': 'Backyard',
+    'Serial Number': 'Default Serial Number',
+    'Firmware Revision': '1.4.3',
+    'Hardware Revision': '1.4.3',
+    'Software Revision': '1.4.3',
+  },
+  values: {
+    ContactSensorState: 0,
+  },
+  'instance': {
+    'name': 'Default Model',
+    'username': '69:62:B7:AE:38:D4',
+    'ipAddress': '192.168.1.11',
+    'port': 51830,
+    connectionFailedCount: 0,
+    services: [],
+    configurationNumber: 1,
+  },
+  'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248658',
 };
 
 const windowCoveringTemp: ServiceType = {

@@ -34,16 +34,22 @@ export class Sensor extends ghToHap implements ghToHap_t {
       let primarySensor = undefined;
 
       Object.keys(this.hap.sensorTypes).forEach(sensor => {
-        const sensorService = services.find(x => x.type === sensor); // select first one.
+        const sensors = services.filter(x => x.type === sensor).map(x => {
+          this.secondaryServices[x.uniqueId] = [x]; // initialize
+          return x;
+        });
+        if (sensors.length > 1) { // multiple instances
+          sensors.forEach(x => this.hap.log.warn(`Skipped to combine ${x.type} due to multiple service instances. ${x.serviceName}`));
+          return;
+        }
+        const sensorService = sensors?.[0];
         if (sensorService) {
           if (sensorService.type === 'ContactSensor' && primaryService?.type === 'WindowCovering') {
             this.hap.log.error(`Unable to combine ${sensorService.serviceName} due to conflicting traits. ${primaryService.serviceName}`);
-            this.secondaryServices[sensorService.uniqueId] = [sensorService];
             return;
           }
           if (sensorService.type === 'ContactSensor' && primaryService?.type === 'Window') {
             this.hap.log.error(`Unable to combine ${sensorService.serviceName} due to conflicting traits. ${primaryService.serviceName}`);
-            this.secondaryServices[sensorService.uniqueId] = [sensorService];
             return;
           }
           if (primarySensor === undefined) {
@@ -61,13 +67,13 @@ export class Sensor extends ghToHap implements ghToHap_t {
         }
       });
     }
-    // non-sensor primary service might respond earlier without sensor properties.
+    // Primary non-sensor service might respond earlier without sensor properties.
     // Create the response to overwrite it.
     if (Object.keys(this.hap.sensorTypes).includes(this.primaryService[service.uniqueId]?.type)) {
       return undefined;
     }
 
-    const primary = this.primaryService[service.uniqueId]; // non-sensor primary service
+    const primary = this.primaryService[service.uniqueId]; // Primary non-sensor service
     if (primary && !primaryResponse) {
       // upward traversal to find a root node.
       return this.hap.types[primary.type].sync(primary); // responds as root node.

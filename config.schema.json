@@ -226,7 +226,7 @@
         "showHeaterCoolerAsACUnit",
         {
           "type": "help",
-          "helpvalue": "<h5><B>Combine sensor services</b></h5><em class='primary-text'>Combines sensor servic(es) of a homebridge accessory, and exposes to inside of non-sensor device if possible, or single device. This will help reduce the number of exposed google devices.</em>"
+          "helpvalue": "<h5><B>Combine sensor services</b></h5><em class='primary-text'>Combines sensor servic(es) within a homebridge accessory, and exposes to inside of non-sensor device if possible, or single device. This will help reduce the number of exposed google devices.</em>"
         },
         "combineSensors",
         {
