@@ -4,7 +4,6 @@ import { Characteristic } from '../hap-types';
 import { ghToHap, ghToHap_t } from './ghToHapTypes';
 
 export class Switch extends ghToHap implements ghToHap_t {
-
   sync(service: ServiceType) {
     const type = service.type === 'Switch' ?
       'action.devices.types.SWITCH' :
