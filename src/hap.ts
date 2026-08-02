@@ -648,7 +648,7 @@ export class Hap {
     if (!this.services.length) {
       return;
     }
-    this.services.filter((service) => 
+    this.services.filter((service) =>
       this.types?.[service.type]?.query,
     ).map((service) => {
       // sensors service might respond as a non-sensor primary service.
