@@ -29,7 +29,7 @@ import { TemperatureSensor } from './types/temperature-sensor.js';
 import { Thermostat } from './types/thermostat.js';
 import { WindowCovering } from './types/window-covering.js';
 import { Window } from './types/window.js';
-import { Sensor } from './types/sensors';
+import { Sensor } from './types/sensors.js';
 
 export class Hap {
   socket;

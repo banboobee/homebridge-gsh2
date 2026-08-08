@@ -1,7 +1,7 @@
 import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
-import { Hap } from '../hap';
-import { ghToHap, ghToHap_t } from './ghToHapTypes';
+import { Hap } from '../hap.js';
+import { ghToHap, ghToHap_t } from './ghToHapTypes.js';
 
 export class Sensor extends ghToHap implements ghToHap_t {
   constructor(
