@@ -1,17 +1,16 @@
 import { WebSocket } from '@homebridge/ws-connect';
-import * as fs from 'fs-extra';
-import * as crypto from 'node:crypto';
-import * as path from 'node:path';
-import * as querystring from 'node:querystring';
+import fs from 'fs-extra';
+import crypto from 'node:crypto';
+import querystring from 'node:querystring';
 
 import type { API, Service, Characteristic } from 'homebridge';
-import { Hap } from './hap';
-import { PluginConfig } from './interfaces';
-import { Log } from './logger';
-import { SERVER_ADDRESS } from './settings';
-import { HomebridgeGoogleSmartHome } from './platform';
+import { Hap } from './hap.js';
+import { PluginConfig } from './interfaces.js';
+import { Log } from './logger.js';
+import { SERVER_ADDRESS } from './settings.js';
+import { HomebridgeGoogleSmartHome } from './platform.js';
 
-import * as WebSocketClient from 'ws';
+import WebSocketClient from 'ws';
 
 export class Plugin {
   public platform: HomebridgeGoogleSmartHome;
@@ -21,7 +20,9 @@ export class Plugin {
   public api: API;
   public hap: Hap;
 
-  public package = fs.readJsonSync(path.resolve(__dirname, '../package.json'));
+  public package = fs.readJsonSync(
+    new URL('../package.json', import.meta.url),
+  );
 
 
 

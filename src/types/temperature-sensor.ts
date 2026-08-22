@@ -1,8 +1,8 @@
-import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
-import { Hap } from '../hap';
-import { Characteristic } from '../hap-types';
-import { ghToHap, ghToHap_t } from './ghToHapTypes';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
+import { Characteristic } from '../hap-types.js';
+import { Hap } from '../hap.js';
+import { ghToHap, ghToHap_t } from './ghToHapTypes.js';
 
 export class TemperatureSensor extends ghToHap implements ghToHap_t {
   constructor(
@@ -67,7 +67,7 @@ export class TemperatureSensor extends ghToHap implements ghToHap_t {
           return current >= y ? i : x;
         }, 0)
       ];
-      response['descriptiveCapacityRemaining'] = description,
+      response['descriptiveCapacityRemaining'] = description;
       response['capacityRemaining'] = [{
         rawValue: current,
         unit: 'PERCENTAGE',

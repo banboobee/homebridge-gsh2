@@ -2,18 +2,19 @@
  * Homebridge Entry Point
  */
 
-import * as fs from 'fs-extra';
+import fs from 'fs-extra';
 import type { API, Characteristic, Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
-import * as path from 'node:path';
-import { PluginConfig } from './interfaces';
+import path from 'node:path';
+import { PluginConfig } from './interfaces.js';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
-import { Plugin } from './main';
+import { Plugin } from './main.js';
 import os from 'os';
 
 export class HomebridgeGoogleSmartHome {
   public accessory: PlatformAccessory;
   public readonly accessories: Map<string, PlatformAccessory> = new Map();
   public plugin: Plugin;
+  // eslint-disable-next-line no-undef
   private manualSyncTimeout: NodeJS.Timeout = null;
 
   constructor(
@@ -35,7 +36,9 @@ export class HomebridgeGoogleSmartHome {
   }
   
   async start() {
-    const homebridgeConfig = await fs.readJson(path.resolve(this.api.user.configPath()));
+    const homebridgeConfig = await fs.readJson(
+      path.resolve(this.api.user.configPath()),
+    );
     const uuid = this.api.hap.uuid.generate(`${PLUGIN_NAME}`);
     
     this.accessory = this.accessories.get(uuid);
@@ -56,7 +59,9 @@ export class HomebridgeGoogleSmartHome {
   }
 
   setupAccessory() {
-    const version = fs.readJsonSync(path.resolve(__dirname, '../package.json')).version;
+    const version = fs.readJsonSync(
+      new URL('../package.json', import.meta.url),
+    ).version;
     const hostname = os.hostname();
     const service: typeof Service = this.api.hap.Service;
     const characteristic: typeof Characteristic = this.api.hap.Characteristic;

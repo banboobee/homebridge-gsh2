@@ -1,37 +1,38 @@
-import { HapClient, ServiceType } from '@homebridge/hap-client';
-import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
+import { Config, HapClient, ServiceType } from '@homebridge/hap-client';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import * as fs from 'fs';
 import { Subject } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
-import { Characteristic } from './hap-types';
+import { Characteristic } from './hap-types.js';
 
-import { PluginConfig } from './interfaces';
-import { Log } from './logger';
-import { Plugin } from './main';
+import { PluginConfig } from './interfaces.js';
+import { Log } from './logger.js';
+import { Plugin } from './main.js';
 
 import type { API } from 'homebridge';
 import { createHash } from 'node:crypto';
-
-import { Door } from './types/door';
-import { Fan } from './types/fan';
-import { Fanv2 } from './types/fan-v2';
-import { GarageDoorOpener } from './types/garage-door-opener';
-import { HeaterCooler } from './types/heater-cooler';
-import { HumiditySensor } from './types/humidity-sensor';
-import { Lightbulb } from './types/lightbulb';
-import { LockMechanism } from './types/lock-mechanism';
-import { SecuritySystem } from './types/security-system';
-import { Switch } from './types/switch';
-import { Television } from './types/television';
-import { ContactSensor } from './types/contact-sensor';
-import { OccupancySensor } from './types/occupancy-sensor';
-import { MotionSensor } from './types/motion-sensor';
-import { TemperatureSensor } from './types/temperature-sensor';
-import { Battery } from './types/battery-status';
-import { Sensor } from './types/sensors';
-import { Thermostat } from './types/thermostat';
-import { Window } from './types/window';
-import { WindowCovering } from './types/window-covering';
+import { Battery } from './types/battery-status.js';
+import { CarbonMonoxideSensor } from './types/carbon-monoxide-sensor.js';
+import { ContactSensor } from './types/contact-sensor.js';
+import { Door } from './types/door.js';
+import { Fanv2 } from './types/fan-v2.js';
+import { Fan } from './types/fan.js';
+import { GarageDoorOpener } from './types/garage-door-opener.js';
+import { HeaterCooler } from './types/heater-cooler.js';
+import { HumiditySensor } from './types/humidity-sensor.js';
+import { Lightbulb } from './types/lightbulb.js';
+import { LockMechanism } from './types/lock-mechanism.js';
+import { MotionSensor } from './types/motion-sensor.js';
+import { OccupancySensor } from './types/occupancy-sensor.js';
+import { SecuritySystem } from './types/security-system.js';
+import { Sensor } from './types/sensors.js';
+import { SmokeSensor } from './types/smoke-sensor.js';
+import { Switch } from './types/switch.js';
+import { Television } from './types/television.js';
+import { TemperatureSensor } from './types/temperature-sensor.js';
+import { Thermostat } from './types/thermostat.js';
+import { WindowCovering } from './types/window-covering.js';
+import { Window } from './types/window.js';
 
 export class Hap {
   plugin: Plugin;
@@ -41,8 +42,11 @@ export class Hap {
   config: PluginConfig;
   hapClient: HapClient;
   services: ServiceType[] = [];
+  // eslint-disable-next-line no-undef
   private startTimeout: NodeJS.Timeout;
+  // eslint-disable-next-line no-undef
   private discoveryTimeout: NodeJS.Timeout;
+  // eslint-disable-next-line no-undef
   private syncTimeout: NodeJS.Timeout;
   private api: API;
   private configDiscoveryTimeout: number;
@@ -54,8 +58,13 @@ export class Hap {
 
   public ready: boolean = undefined;
 
-  private dummy = () => {};
-  
+  // These are just placeholers to prevent linting errors.  And this comment is to stop review agents from complaining about this code.
+  private dummy = {
+    sync: () => undefined,
+    query: () => undefined,
+    execute: () => undefined,
+  };
+
   /* GSH Supported types */
   types = {
     Door: new Door(),
@@ -77,6 +86,8 @@ export class Hap {
     Speaker: this.dummy,
     InputSource: this.dummy,
     ContactSensor: new ContactSensor(),
+    CarbonMonoxideSensor: new CarbonMonoxideSensor(),
+    SmokeSensor: new SmokeSensor(),
     OccupancySensor: new OccupancySensor(),
     MotionSensor: new MotionSensor(),
     Battery: new Battery(),
@@ -126,13 +137,16 @@ export class Hap {
     Characteristic.ActiveIdentifier,
     Characteristic.Mute,
     Characteristic.ContactSensorState,
+    Characteristic.CarbonMonoxideDetected,
     Characteristic.OccupancyDetected,
     Characteristic.CurrentMediaState,
     Characteristic.MotionDetected,
+    Characteristic.SmokeDetected,
     Characteristic.StatusLowBattery,
     Characteristic.BatteryLevel,
   ];
 
+  instanceBlacklist: Array<string> = [];
   accessoryFilter: Array<string> = [];
   accessoryFilterInverse: boolean;
   accessorySerialFilter: Array<string> = [];
@@ -152,7 +166,7 @@ export class Hap {
     this.accessoryFilter = config.accessoryFilter || [];
     this.accessoryFilterInverse = config.accessoryFilterInverse || false;
     this.accessorySerialFilter = config.accessorySerialFilter || [];
-    config.instanceBlacklist = config.instanceDenylist || [];
+    this.instanceBlacklist = config.instanceDenylist || [];
 
     if (config.combineSensors) {
       Object.keys(this.types).forEach(type => {
@@ -163,7 +177,7 @@ export class Hap {
           private primaryService = {};
           private secondaryServices = {};
           private types;
-          
+
           constructor(hap) {
             super(hap);
             this.types = hap.types;
@@ -173,7 +187,7 @@ export class Hap {
             const response = super.sync(service);
             this.secondaryServices[service.uniqueId]?.forEach(secondary => {
               const update = this.types[secondary.type].sync(secondary, response);
-              const attribute = {...response.attributes, ...update.attributes};
+              const attribute = { ...response.attributes, ...update.attributes };
               response.traits = [...response.traits, ...update.traits];
               if (Object.keys(attribute).length > 0) {
                 response.attributes = attribute;
@@ -196,7 +210,7 @@ export class Hap {
           }
         }(this);
       });
-    
+
       for (const service of this.sensorServices) {
         this.sensorTypes[service] = this.types[service];
         this.types[service] = this.sensors;
@@ -230,8 +244,14 @@ export class Hap {
    */
 
   async discover() {
+    const hapConfig: Config = {
+      debug: this.config.debug,
+      instanceBlacklist: this.instanceBlacklist,
+      discoveryTimeout: this.configDiscoveryTimeout * 1000,
+    };
+
     this.hapClient = new HapClient({
-      config: this.config,
+      config: hapConfig,
       pin: this.pin,
       logger: this.log,
     });
@@ -333,7 +353,7 @@ export class Hap {
       }
       const ix = response.findIndex(x => x.id === update.id);
       if (ix > -1) {
-        // sensors service might rebuild non-sensor primary service response.
+        // sensors service might rebuild primary non-sensor service response.
         // console.log('updated sync response.', service.serviceName, update);
         response[ix] = update;
         return response;
@@ -402,7 +422,7 @@ export class Hap {
       response[device.id] = {};
       if (service) {
         await this.getStatus(service);
-        const {id, ...update} = this.types[service.type].query(service);
+        const { id, ...update } = this.types[service.type].query(service);
         if (id) {
           const target = this.services.find(x => x.uniqueId === id);
           this.log.error(`Unexpected query response ${target.serviceName} instead of ${service.serviceName}. ${update}`);
@@ -425,8 +445,9 @@ export class Hap {
     for (const command of commands) {
       for (const device of command.devices) {
         const service = this.services.find(x => x.uniqueId === device.id);
-        this.log.debug(`Processing command ${command.execution[0].command} for ${device.id} and ${service?.serviceName}`);
+
         if (service) {
+          this.log.debug(`Processing command ${command.execution[0].command} for ${device.id} and ${service.serviceName}`);
           // check if two factor auth is required, and if we have it
           if (this.config.twoFactorAuthPin && this.types[service.type].twoFactorRequired
             && this.types[service.type].is2faRequired(command)
@@ -463,6 +484,7 @@ export class Hap {
           }
         } else {
           this.log.error(`Device not found: ${device.id}`);
+          // this.log.debug(`Device not found in services list: ${JSON.stringify(this.services)}`);
           response.push({
             ids: [device.id],
             status: 'OFFLINE',
@@ -499,6 +521,7 @@ export class Hap {
       }
       services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
+      services = services.filter(x => !this.instanceBlacklist.find(y => y === x?.instance?.username));
       // Pre-compile accessoryFilter strings into RegExp objects
       const compiledAccessoryFilter = this.accessoryFilter.map(filter => new RegExp(filter));
       const searchList = (target: string, regexList: RegExp[]): boolean => {
@@ -631,7 +654,7 @@ export class Hap {
         continue;
       }
       // sensors service might respond as a non-sensor primary service.
-      const {id = service.uniqueId, ...response} = this.types[service.type].query(service);
+      const { id = service.uniqueId, ...response } = this.types[service.type].query(service);
       // response['target'] = this.services.find(x => x.uniqueId === id).serviceName;
       // response['origin'] = service.serviceName;
       // console.log(response);
@@ -648,15 +671,23 @@ export class Hap {
     if (!this.services.length) {
       return;
     }
-    this.services.filter((service) =>
-      this.types?.[service.type]?.query,
-    ).map((service) => {
-      // sensors service might respond as a non-sensor primary service.
-      const {id = service.uniqueId, ...update} = this.types[service.type].query(service);
-      // update['target'] = this.services.find(x => x.uniqueId === id).serviceName;
-      // update['origin'] = service.serviceName;
-      states[id] = update;
-    });
+
+    this.services
+      .filter((service) => this.types?.[service.type]?.query)
+      .map((service) => {
+        const result = this.types[service.type].query(service);
+
+        if (!result) {
+          // this.log.debug(`Query returned no result for ${service.type}: ${service.serviceName}`);
+          return;
+        }
+
+        const { id = service.uniqueId, ...update } = result;
+        // update['target'] = this.services.find(x => x.uniqueId === id).serviceName;
+        // update['origin'] = service.serviceName;
+        states[id] = update;
+      });
+
     return await this.sendStateReport(states);
   }
 

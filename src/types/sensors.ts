@@ -1,7 +1,7 @@
-import { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
+import type { SmartHomeV1ExecuteRequestCommands, SmartHomeV1ExecuteResponseCommands, SmartHomeV1SyncDevices } from 'actions-on-google';
 import { ServiceType } from '@homebridge/hap-client';
-import { Hap } from '../hap';
-import { ghToHap, ghToHap_t } from './ghToHapTypes';
+import { Hap } from '../hap.js';
+import { ghToHap, ghToHap_t } from './ghToHapTypes.js';
 
 export class Sensor extends ghToHap implements ghToHap_t {
   constructor(
@@ -44,11 +44,8 @@ export class Sensor extends ghToHap implements ghToHap_t {
         }
         const sensorService = sensors?.[0];
         if (sensorService) {
-          if (sensorService.type === 'ContactSensor' && primaryService?.type === 'WindowCovering') {
-            this.hap.log.error(`Unable to combine ${sensorService.serviceName} due to conflicting traits. ${primaryService.serviceName}`);
-            return;
-          }
-          if (sensorService.type === 'ContactSensor' && primaryService?.type === 'Window') {
+          if (sensorService.type === 'ContactSensor'
+            && ['Door', 'GarageDoorOpener', 'Window', 'WindowCovering'].includes(primaryService?.type)) {
             this.hap.log.error(`Unable to combine ${sensorService.serviceName} due to conflicting traits. ${primaryService.serviceName}`);
             return;
           }

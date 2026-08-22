@@ -1,0 +1,88 @@
+name: "Build, Publish and Release"
+
+ 
+ #
+ # Automatically publish beta releases on pushes, require a manual workflow action for production releases
+ #
+ # Does the following
+ # 1 - Run the documentation script against the package
+ # 2 - Create the npm package using the package.json version tag ( or for beta releases, adds a beta tag and increments as needed )
+ # 3 - Publish the npm package
+ # 4 - For releases against the latest branch, create a github release as well
+  
+on:
+  push:
+    branches: [beta-*.*.*, beta]
+  workflow_dispatch:
+
+concurrency:
+  group: build_and_publish
+  cancel-in-progress: true
+
+jobs:
+  get_tags:
+    runs-on: ubuntu-latest
+
+    steps:
+    # checkout repo
+    - uses: actions/checkout@v6
+
+    # get branch / tag name
+    - name: Get Branch / Tag Name
+      id: get_branch
+      run: |
+        export BRANCH_NAME=$(if [[ ${GITHUB_REF} =~ "refs/tags/" ]]; then echo ${GITHUB_REF/refs\/tags\//}; else echo ${GITHUB_REF/refs\/heads\//}; fi)
+        echo $BRANCH_NAME
+        echo "BRANCH_NAME=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+
+    # generate the image tag
+    - name: Get Image Tag
+      id: get_tag
+      run: |
+        export TARGET_IMAGE_TAG=$(if [ "${{ steps.get_branch.outputs.BRANCH_NAME }}" = "latest" ]; then echo "latest"; else echo "${{ steps.get_branch.outputs.BRANCH_NAME }}" | awk -F- '{ print $1 }'; fi)
+        echo $TARGET_IMAGE_TAG
+        echo "TARGET_IMAGE_TAG=${TARGET_IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+    outputs:
+      BRANCH_NAME: ${{ steps.get_branch.outputs.BRANCH_NAME }}
+      TARGET_IMAGE_TAG: ${{ steps.get_tag.outputs.TARGET_IMAGE_TAG }}
+
+  publish_prod_release:
+    permissions:
+      id-token: write
+    needs: [get_tags]
+    name: Publish Release Version
+    if: ${{ needs.get_tags.outputs.BRANCH_NAME == 'latest' }}
+    uses: homebridge/.github/.github/workflows/npm-publish-esm-oidc.yml@latest
+    with:
+      install_cmd: npm ci && cd homebridge-ui/public && npm ci
+
+  publish_test_release:
+    permissions:
+      id-token: write
+    needs: [get_tags]
+    name: Publish Test Version - ${{ needs.get_tags.outputs.BRANCH_NAME }}
+    if: ${{ needs.get_tags.outputs.BRANCH_NAME != 'latest' }}
+    uses: homebridge/.github/.github/workflows/npm-publish-esm-oidc.yml@latest
+    with:
+      tag: ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
+      dynamically_adjust_version: true
+      npm_version_command: 'pre'
+      pre_id: ${{ needs.get_tags.outputs.TARGET_IMAGE_TAG }}
+      install_cmd: npm ci && cd homebridge-ui/public && npm ci
+
+  publish_github_release:
+    needs: [publish_prod_release]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ needs.publish_prod_release.outputs.NPM_VERSION }}
+        name: Release ${{ needs.publish_prod_release.outputs.NPM_VERSION }}
+        generate_release_notes: true
+        draft: false
+        prerelease: false
