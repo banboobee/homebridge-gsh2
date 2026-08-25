@@ -308,7 +308,9 @@ export class Hap {
    */
   async start() {
     this.ready = false;
-    this.log.info(`Discovered ${this.discoveredInstances.length} out of ${this.cachedInstances.length} cached homebridge instances.`);
+    if (this.cachedInstances.length > 0) {
+      this.log.info(`Discovered ${this.discoveredInstances.length} out of ${this.cachedInstances.length} cached homebridge instances.`);
+    }
     if (this.startTimeout) {
       clearTimeout(this.startTimeout);
     }
