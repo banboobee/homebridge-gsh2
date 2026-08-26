@@ -58,12 +58,12 @@ export class Hap {
 
   public ready: boolean = undefined;
 
-  // These are just placeholers to prevent linting errors.  And this comment is to stop review agents from complaining about this code.
-  private dummy = {
-    sync: () => undefined,
-    query: () => undefined,
-    execute: () => undefined,
-  };
+  // // These are just placeholers to prevent linting errors.  And this comment is to stop review agents from complaining about this code.
+  // private dummy = {
+  //   sync: () => undefined,
+  //   query: () => undefined,
+  //   execute: () => undefined,
+  // };
 
   /* GSH Supported types */
   types = {
@@ -83,8 +83,10 @@ export class Hap {
     Thermostat: new Thermostat(this),
     Window: new Window(),
     WindowCovering: new WindowCovering(),
-    Speaker: this.dummy,
-    InputSource: this.dummy,
+    Speaker: undefined,
+    InputSource: undefined,
+    // Speaker: this.dummy,
+    // InputSource: this.dummy,
     ContactSensor: new ContactSensor(),
     CarbonMonoxideSensor: new CarbonMonoxideSensor(),
     SmokeSensor: new SmokeSensor(),
@@ -170,7 +172,8 @@ export class Hap {
 
     if (config.combineSensors) {
       Object.keys(this.types).forEach(type => {
-        if (this.types[type] === this.dummy) {
+        if (this.types[type] === undefined) {
+        // if (this.types[type] === this.dummy) {
           return;
         }
         this.types[type] = new class extends this.types[type].constructor {
@@ -451,8 +454,8 @@ export class Hap {
         if (service) {
           this.log.debug(`Processing command ${command.execution[0].command} for ${device.id} and ${service.serviceName}`);
           // check if two factor auth is required, and if we have it
-          if (this.config.twoFactorAuthPin && this.types[service.type].twoFactorRequired
-            && this.types[service.type].is2faRequired(command)
+          if (this.config.twoFactorAuthPin && this.types[service.type]?.twoFactorRequired
+            && this.types[service.type]?.is2faRequired(command)
             && !(command.execution.length && command.execution[0].challenge
               && command.execution[0].challenge.pin === this.config.twoFactorAuthPin.toString()
             )
@@ -521,7 +524,8 @@ export class Hap {
           this.log.error(`Failed to write discovery response to file: ${e.message}`);
         }
       }
-      services = services.filter(x => this.types[x.type] !== undefined);
+      services = services.filter(x => x.type in this.types);
+      // services = services.filter(x => this.types[x.type] !== undefined);
       this.log.debug(`Loaded ${services.length} accessories from Homebridge - pre filter`);
       services = services.filter(x => !this.instanceBlacklist.find(y => y === x?.instance?.username));
       // Pre-compile accessoryFilter strings into RegExp objects
@@ -545,7 +549,7 @@ export class Hap {
       services = services.filter(x => !this.accessorySerialFilter.includes(x.accessoryInformation['Serial Number']));
       // if 2fa is forced for this service type, but a pin has not been set ignore the service
       services = services.filter(x => {
-        if (this.types[x.type].twoFactorRequired && !this.config.twoFactorAuthPin && !this.config.disablePinCodeRequirement) {
+        if (this.types[x.type]?.twoFactorRequired && !this.config.twoFactorAuthPin && !this.config.disablePinCodeRequirement) {
           this.log.warn(`Not registering ${x.serviceName} - Pin code has not been set and is required for secure ` +
             `${x.type} accessory types. See https://git.io/JUQWX`);
           return false;
@@ -677,17 +681,21 @@ export class Hap {
     this.services
       .filter((service) => this.types?.[service.type]?.query)
       .map((service) => {
-        const result = this.types[service.type].query(service);
-
-        if (!result) {
-          // this.log.debug(`Query returned no result for ${service.type}: ${service.serviceName}`);
-          return;
-        }
-
-        const { id = service.uniqueId, ...update } = result;
+        // sensors service might respond as a primary non-sensor service.
+        const { id = service.uniqueId, ...update } = this.types[service.type].query(service);
         // update['target'] = this.services.find(x => x.uniqueId === id).serviceName;
         // update['origin'] = service.serviceName;
         states[id] = update;
+
+        // const result = this.types[service.type].query(service);
+
+        // if (!result) {
+        //   // this.log.debug(`Query returned no result for ${service.type}: ${service.serviceName}`);
+        //   return;
+        // }
+
+        // const { id = service.uniqueId, ...update } = result;
+        // states[id] = update;
       });
 
     return await this.sendStateReport(states);
