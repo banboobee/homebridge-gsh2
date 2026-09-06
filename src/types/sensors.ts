@@ -10,8 +10,8 @@ export class Sensor extends ghToHap implements ghToHap_t {
     super();
   }
 
-  private primaryService = {};
-  private secondaryServices = {};
+  // private primaryService = {};
+  // private secondaryServices = {};
   private syncing = true;
 
   sync(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices): SmartHomeV1SyncDevices | undefined {

@@ -27,6 +27,7 @@ import { OccupancySensor } from './types/occupancy-sensor.js';
 import { SecuritySystem } from './types/security-system.js';
 import { Sensor } from './types/sensors.js';
 import { SmokeSensor } from './types/smoke-sensor.js';
+import { Speaker } from './types/speaker.js';
 import { Switch } from './types/switch.js';
 import { Television } from './types/television.js';
 import { TemperatureSensor } from './types/temperature-sensor.js';
@@ -83,7 +84,7 @@ export class Hap {
     Thermostat: new Thermostat(this),
     Window: new Window(),
     WindowCovering: new WindowCovering(),
-    Speaker: undefined,
+    Speaker: new Speaker(),
     InputSource: undefined,
     // Speaker: this.dummy,
     // InputSource: this.dummy,
@@ -170,50 +171,52 @@ export class Hap {
     this.accessorySerialFilter = config.accessorySerialFilter || [];
     this.instanceBlacklist = config.instanceDenylist || [];
 
-    if (config.combineSensors) {
-      Object.keys(this.types).forEach(type => {
-        if (this.types[type] === undefined) {
+    Object.keys(this.types).forEach(type => {
+      if (this.types[type] === undefined) {
         // if (this.types[type] === this.dummy) {
-          return;
+        return;
+      }
+      // refer TemperatureSensor as a representative device class
+      const base = this.types[type].constructor as typeof TemperatureSensor;
+      this.types[type] = new class extends base {
+        // private primaryService = {};
+        // private secondaryServices = {};
+        private types;
+
+        constructor(hap) {
+          super(hap);
+          this.types = hap.types;
         }
-        this.types[type] = new class extends this.types[type].constructor {
-          private primaryService = {};
-          private secondaryServices = {};
-          private types;
 
-          constructor(hap) {
-            super(hap);
-            this.types = hap.types;
-          }
+        sync(service) {
+          const response = super.sync(service);
+          this.secondaryServices[service.uniqueId]?.forEach(secondary => {
+            const update = this.types[secondary.type].sync(secondary, response);
+            const attribute = { ...response.attributes, ...update.attributes };
+            response.traits = [...response.traits, ...update.traits];
+            if (Object.keys(attribute).length > 0) {
+              response.attributes = attribute;
+            }
+          });
+          return response;
+        }
 
-          sync(service) {
-            const response = super.sync(service);
-            this.secondaryServices[service.uniqueId]?.forEach(secondary => {
-              const update = this.types[secondary.type].sync(secondary, response);
-              const attribute = { ...response.attributes, ...update.attributes };
-              response.traits = [...response.traits, ...update.traits];
-              if (Object.keys(attribute).length > 0) {
-                response.attributes = attribute;
-              }
-            });
-            return response;
-          }
+        query(service) {
+          const response = super.query(service);
+          this.secondaryServices[service.uniqueId]?.forEach(secondary => {
+            const update = this.types[secondary.type].query(secondary, response);
+            Object.assign(response, update);
+          });
+          return response;
+        }
 
-          query(service) {
-            const response = super.query(service);
-            this.secondaryServices[service.uniqueId]?.forEach(secondary => {
-              const update = this.types[secondary.type].query(secondary, response);
-              Object.assign(response, update);
-            });
-            return response;
-          }
+        execute(service, command) {
+          return super.execute(service, command);
+        }
+      }(this);
+    });
 
-          exec(service, command) {
-            return super.exec(service, command);
-          }
-        }(this);
-      });
-
+    if (config.combineSensors) {
       for (const service of this.sensorServices) {
         this.sensorTypes[service] = this.types[service];
         this.types[service] = this.sensors;
