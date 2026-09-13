@@ -84,7 +84,7 @@ export class Hap {
     Thermostat: new Thermostat(this),
     Window: new Window(),
     WindowCovering: new WindowCovering(),
-    Speaker: new Speaker(),
+    Speaker: new Speaker(this),
     InputSource: undefined,
     // Speaker: this.dummy,
     // InputSource: this.dummy,
@@ -176,8 +176,8 @@ export class Hap {
         // if (this.types[type] === this.dummy) {
         return;
       }
-      // refer TemperatureSensor as a representative device class
-      const base = this.types[type].constructor as typeof TemperatureSensor;
+      // refer Speaker as a representative device class
+      const base = this.types[type].constructor as typeof Speaker;
       this.types[type] = new class extends base {
         // private primaryService = {};
         // private secondaryServices = {};
@@ -188,12 +188,12 @@ export class Hap {
           this.types = hap.types;
         }
 
-        sync(service) {
-          const response = super.sync(service);
+        sync(service, primaryResponse) {
+          const response = super.sync(service, primaryResponse);
           this.secondaryServices[service.uniqueId]?.forEach(secondary => {
             const update = this.types[secondary.type].sync(secondary, response);
             const attribute = { ...response.attributes, ...update.attributes };
-            response.traits = [...response.traits, ...update.traits];
+            response.traits = [...new Set([...response.traits, ...update.traits])];
             if (Object.keys(attribute).length > 0) {
               response.attributes = attribute;
             }
@@ -201,8 +201,8 @@ export class Hap {
           return response;
         }
 
-        query(service) {
-          const response = super.query(service);
+        query(service, primaryResponse) {
+          const response = super.query(service, primaryResponse);
           this.secondaryServices[service.uniqueId]?.forEach(secondary => {
             const update = this.types[secondary.type].query(secondary, response);
             Object.assign(response, update);
@@ -210,8 +210,20 @@ export class Hap {
           return response;
         }
 
-        execute(service, command) {
-          return super.execute(service, command);
+        async execute(service, command) {
+          let response = await super.execute(service, command);
+          if (response) {
+            return response;
+          }
+	  response = { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
+          for (const secondary of this.secondaryServices[service.uniqueId] ?? []) {
+            response = await this.types[secondary.type].execute(secondary, command);
+            response.ids = [service.uniqueId];
+            if (response?.status === 'ERROR') {
+              break;
+            }
+          }
+          return response;
         }
       }(this);
     });
@@ -271,7 +283,7 @@ export class Hap {
         return x;
       }, []);
     // console.log(this.cachedInstances);
-    
+
     this.waitForNoMoreDiscoveries();
     this.hapClient.on('instance-discovered', this.waitForNoMoreDiscoveries);
 
@@ -290,7 +302,7 @@ export class Hap {
       }
     }
     if (this.ready === false) {
-      return;	// currently initializing. May loose this instance.
+      return;   // currently initializing. May loose this instance.
     }
 
     // Clear any existing timeout
@@ -385,7 +397,7 @@ export class Hap {
             x.sync = {
               id: id,
               type: type,
-              _traits: traits, 
+              _traits: traits,
               ..._sync,
             };
           }
@@ -398,7 +410,7 @@ export class Hap {
     }
     // console.log(devices);
     // console.log(devices.length);
-    
+
     return devices;
   }
 
@@ -604,10 +616,10 @@ export class Hap {
       }
       this.unavailableServiceCount = 0;
       for (const x of Object.keys(latestSync ?? [])) {
-        if (!latestSync[x]?.unavailable) {	// consistent or wrong record
+        if (!latestSync[x]?.unavailable) {      // consistent or wrong record
           continue;
         }
-        const response = latestSync[x]?.sync;	// inconsistent records
+        const response = latestSync[x]?.sync;   // inconsistent records
         const name = response?.name.name;
         const aid = response?.customData.aid;
         const iid = response?.customData.iid;
