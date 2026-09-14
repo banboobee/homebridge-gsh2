@@ -89,22 +89,22 @@ export class Speaker extends ghToHap implements ghToHap_t {
       response['id'] = primary.uniqueId; // responds as root node.
       return response;
     }
-    if (!primaryResponse?.online) {
+    if (primaryResponse?.online === undefined) {
       response.online = true;
     }
-    if (!primaryResponse?.on) {
+    if (primaryResponse?.on === undefined) {
       const active = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active);
       response.on = active ? !!active : true;
     }
-    if (!primaryResponse?.currentVolume) {
+    if (primaryResponse?.currentVolume === undefined) {
       const volume = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Volume);
       response.currentVolume = volume ? Math.round(20 * Number(volume.value) / 100) : 10;
     }
-    if (!primaryResponse?.isMuted) {
+    if (primaryResponse?.isMuted === undefined) {
       const mute = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Mute);
       response.isMuted = mute ? !!mute.value : false;
     }
-    if (!primaryResponse?.playbackState) {
+    if (primaryResponse?.playbackState === undefined) {
       const mediaState = service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentMediaState);
       if (mediaState) {
         // response.activityState = response.on ? 'STANDBY' : 'INACTIVE';
