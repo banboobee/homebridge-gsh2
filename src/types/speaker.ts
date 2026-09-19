@@ -73,13 +73,13 @@ export class Speaker extends ghToHap implements ghToHap_t {
   query(service: ServiceType, primaryResponse?: Record<string, any>) {
     let response = {} as any;
 
-    const primary = Speaker.primaryService[service.uniqueId];
-    if (primary && !primaryResponse) {
-      // upward traversal to find a root node
-      response = this.hap.types[primary.type].query(primary);
-      response['id'] = primary.uniqueId; // responds as root node.
-      return response;
-    }
+    // const primary = Speaker.primaryService[service.uniqueId];
+    // if (primary && !primaryResponse) {
+    //   // upward traversal to find a root node
+    //   response = this.hap.types[primary.type].query(primary);
+    //   response['id'] = primary.uniqueId; // responds as root node.
+    //   return response;
+    // }
 
     if (primaryResponse?.online === undefined) {
       response.online = true;

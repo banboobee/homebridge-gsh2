@@ -189,6 +189,10 @@ export class Hap {
         }
 
         sync(service, primaryResponse) {
+          /* primary won't be available until sync for secondaries
+           * would complete. need to take self finding approach,
+           * or sort services to find secondaries first.
+           */
           // const primary = Speaker.primaryService[service.uniqueId];
           // if (primary && !primaryResponse) {
           //   // upward traversal to find a root node.
@@ -208,13 +212,13 @@ export class Hap {
         }
 
         query(service, primaryResponse) {
-          // const primary = Sensor.primaryService[service.uniqueId];
-          // if (primary && !primaryResponse) {
-          //   // upward traversal to find a root node
-          //   const response = this.types[primary.type].query(primary);
-          //   response['id'] ??= primary.uniqueId; // responds as root node.
-          //   return response;
-          // }
+          const primary = Sensor.primaryService[service.uniqueId];
+          if (primary && !primaryResponse) {
+            // upward traversal to find a root node
+            const response = this.types[primary.type].query(primary);
+            response['id'] ??= primary.uniqueId; // responds as root node.
+            return response;
+          }
 
           const response = super.query(service, primaryResponse);
           Speaker.secondaryServices[service.uniqueId]?.forEach(secondary => {

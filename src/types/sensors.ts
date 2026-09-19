@@ -54,23 +54,23 @@ export class Sensor extends ghToHap implements ghToHap_t {
     }
 
     // root node or received root node response. collect secondary responses.
-    const response = this.hap.sensorTypes[service.type].sync(service);
+    const response = this.hap.sensorTypes[service.type].sync(service, primaryResponse);
     // console.log(response);
 
     return this.createSyncData(service, response);
   }
 
   query(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices) {
-    const primary = Sensor.primaryService[service.uniqueId];
-    if (primary && !primaryResponse) {
-      // upward traversal to find a root node
-      const response = this.hap.types[primary.type].query(primary);
-      response['id'] ??= primary.uniqueId; // responds as root node.
-      return response;
-    }
+    // const primary = Sensor.primaryService[service.uniqueId];
+    // if (primary && !primaryResponse) {
+    //   // upward traversal to find a root node
+    //   const response = this.hap.types[primary.type].query(primary);
+    //   response['id'] ??= primary.uniqueId; // responds as root node.
+    //   return response;
+    // }
 
     // root node or received root node response. collect secondary responses.
-    const response = this.hap.sensorTypes[service.type].query(service);
+    const response = this.hap.sensorTypes[service.type].query(service, primaryResponse);
     // console.log(response);
 
     return response;
