@@ -189,8 +189,14 @@ export class Hap {
         }
 
         sync(service, primaryResponse) {
+          // const primary = Speaker.primaryService[service.uniqueId];
+          // if (primary && !primaryResponse) {
+          //   // upward traversal to find a root node.
+          //   return this.types[primary.type].sync(primary); // responds as root node.
+          // }
+
           const response = super.sync(service, primaryResponse);
-          this.secondaryServices[service.uniqueId]?.forEach(secondary => {
+          Speaker.secondaryServices[service.uniqueId]?.forEach(secondary => {
             const update = this.types[secondary.type].sync(secondary, response);
             const attribute = { ...response.attributes, ...update.attributes };
             response.traits = [...new Set([...response.traits, ...update.traits])];
@@ -202,8 +208,16 @@ export class Hap {
         }
 
         query(service, primaryResponse) {
+          // const primary = Sensor.primaryService[service.uniqueId];
+          // if (primary && !primaryResponse) {
+          //   // upward traversal to find a root node
+          //   const response = this.types[primary.type].query(primary);
+          //   response['id'] ??= primary.uniqueId; // responds as root node.
+          //   return response;
+          // }
+
           const response = super.query(service, primaryResponse);
-          this.secondaryServices[service.uniqueId]?.forEach(secondary => {
+          Speaker.secondaryServices[service.uniqueId]?.forEach(secondary => {
             const update = this.types[secondary.type].query(secondary, response);
             Object.assign(response, update);
           });
@@ -215,8 +229,8 @@ export class Hap {
           if (response) {
             return response;
           }
-	  response = { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
-          for (const secondary of this.secondaryServices[service.uniqueId] ?? []) {
+          response = { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
+          for (const secondary of Speaker.secondaryServices[service.uniqueId] ?? []) {
             response = await this.types[secondary.type].execute(secondary, command);
             response.ids = [service.uniqueId];
             if (response?.status === 'ERROR') {
@@ -364,6 +378,7 @@ export class Hap {
    * Build Google SYNC intent payload
    */
   async buildSyncResponse(): Promise<SmartHomeV1SyncDevices[]> {
+    Speaker.reset();
     const devices = this.services.filter((service) =>
       this.types?.[service.type]?.sync,
     ).reduce((response, service) => {

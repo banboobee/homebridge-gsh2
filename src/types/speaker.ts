@@ -11,25 +11,17 @@ export class Speaker extends ghToHap implements ghToHap_t {
     super();
   }
 
-  private syncing = true;
-
   sync(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices) {
     const tv = this.hap.services.find(x => x.aid === service.aid && x.instance.username === service.instance.username && x.type === 'Television');
-    if (this.syncing === false) {       // switch to syncing
-      // if (tv) {      // !!! also in sensors
-      //   this.hap.types[tv.type].secondaryServices = {};
-      // }
-      this.primaryService = {};
-      this.syncing = true;
+
+    if (tv && !Speaker.primaryService[service.uniqueId]) {
+      Speaker.primaryService[service.uniqueId] = tv;
+      Speaker.secondaryServices[tv.uniqueId] ??= [];
+      Speaker.secondaryServices[tv.uniqueId].push(service);
     }
 
     if (tv && !primaryResponse) {
-      this.primaryService[service.uniqueId] = tv;
-      this.hap.types[tv.type].secondaryServices[tv.uniqueId] ??= [];
-      const secondaries = this.hap.types[tv.type].secondaryServices[tv.uniqueId];
-      if (secondaries.findIndex(x => x.uniqueId === service.uniqueId) < 0) {
-        secondaries.push(service);
-      }
+      // upward traversal to find a root node.
       return this.hap.types[tv.type].sync(tv); // responds as root node.
     }
 
@@ -79,16 +71,16 @@ export class Speaker extends ghToHap implements ghToHap_t {
   }
 
   query(service: ServiceType, primaryResponse?: Record<string, any>) {
-    this.syncing = false;       // switch to query
     let response = {} as any;
 
-    const primary = this.primaryService[service.uniqueId];
+    const primary = Speaker.primaryService[service.uniqueId];
     if (primary && !primaryResponse) {
       // upward traversal to find a root node
       response = this.hap.types[primary.type].query(primary);
       response['id'] = primary.uniqueId; // responds as root node.
       return response;
     }
+
     if (primaryResponse?.online === undefined) {
       response.online = true;
     }
