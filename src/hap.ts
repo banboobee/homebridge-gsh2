@@ -190,8 +190,7 @@ export class Hap {
 
         sync(service, primaryResponse) {
           /* primary won't be available until sync for secondaries
-           * would complete. need to take self finding approach,
-           * or sort services to find secondaries first.
+           * would complete. need to take self finding approach.
            */
           // const primary = Speaker.primaryService[service.uniqueId];
           // if (primary && !primaryResponse) {
@@ -392,7 +391,7 @@ export class Hap {
       }
       const ix = response.findIndex(x => x.id === update.id);
       if (ix > -1) {
-        // sensors service might rebuild primary non-sensor service response.
+        // secondary service might rebuild primary service response.
         // console.log('updated sync response.', service.serviceName, update);
         response[ix] = update;
         return response;
@@ -693,7 +692,7 @@ export class Hap {
       if (!this.types?.[service.type]?.query) {
         continue;
       }
-      // sensors service might respond as a non-sensor primary service.
+      // secondary services respond as a primary service.
       const { id = service.uniqueId, ...response } = this.types[service.type].query(service);
       // response['target'] = this.services.find(x => x.uniqueId === id).serviceName;
       // response['origin'] = service.serviceName;
@@ -715,7 +714,7 @@ export class Hap {
     this.services
       .filter((service) => this.types?.[service.type]?.query)
       .map((service) => {
-        // sensors service might respond as a primary non-sensor service.
+        // secondary services might respond as a primary service.
         const { id = service.uniqueId, ...update } = this.types[service.type].query(service);
         // update['target'] = this.services.find(x => x.uniqueId === id).serviceName;
         // update['origin'] = service.serviceName;
