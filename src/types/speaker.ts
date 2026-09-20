@@ -20,11 +20,6 @@ export class Speaker extends ghToHap implements ghToHap_t {
       Speaker.secondaryServices[tv.uniqueId].push(service);
     }
 
-    if (tv && !primaryResponse) {
-      // upward traversal to find a root node.
-      return this.hap.types[tv.type].sync(tv); // responds as root node.
-    }
-
     const traits = [
       // 'action.devices.traits.MediaState',    // Required
       // 'action.devices.traits.OnOff',

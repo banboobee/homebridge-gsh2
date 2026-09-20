@@ -189,16 +189,12 @@ export class Hap {
         }
 
         sync(service, primaryResponse) {
-          /* primary won't be available until sync for secondaries
-           * would complete. need to take self finding approach.
-           */
-          // const primary = Speaker.primaryService[service.uniqueId];
-          // if (primary && !primaryResponse) {
-          //   // upward traversal to find a root node.
-          //   return this.types[primary.type].sync(primary); // responds as root node.
-          // }
+          const response = super.sync(service, primaryResponse);// setup hierarchy
+          const primary = Speaker.primaryService[service.uniqueId];
 
-          const response = super.sync(service, primaryResponse);
+          if (primary && !primaryResponse) {                    // upward traversal to find a root node.
+            return this.types[primary.type].sync(primary);      // responds as root node.
+          }
           Speaker.secondaryServices[service.uniqueId]?.forEach(secondary => {
             const update = this.types[secondary.type].sync(secondary, response);
             const attribute = { ...response.attributes, ...update.attributes };
@@ -381,7 +377,7 @@ export class Hap {
    * Build Google SYNC intent payload
    */
   async buildSyncResponse(): Promise<SmartHomeV1SyncDevices[]> {
-    Speaker.reset();
+    Speaker.reset();    // initialize hierarchy
     const devices = this.services.filter((service) =>
       this.types?.[service.type]?.sync,
     ).reduce((response, service) => {
