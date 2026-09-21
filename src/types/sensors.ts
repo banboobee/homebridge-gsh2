@@ -10,7 +10,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
     super();
   }
 
-  sync(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices): SmartHomeV1SyncDevices | undefined {
+  sync(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices): SmartHomeV1SyncDevices {
     if (!Sensor.secondaryServices[service.uniqueId] && !Sensor.primaryService[service.uniqueId]) {
       const services = this.hap.services.filter(x => x.aid === service.aid && x.instance.username === service.instance.username) ?? [];
       const primaryService = services
@@ -49,7 +49,7 @@ export class Sensor extends ghToHap implements ghToHap_t {
     const response = this.hap.sensorTypes[service.type].sync(service, primaryResponse);
     // console.log(response);
 
-    return this.createSyncData(service, response);
+    return response;
   }
 
   query(service: ServiceType, primaryResponse?: SmartHomeV1SyncDevices) {
