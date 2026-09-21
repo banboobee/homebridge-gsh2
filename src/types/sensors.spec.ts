@@ -17,7 +17,7 @@ const socketMock = new class {
   }
 
   sendJson(data: any) {
-     
+
     console.log('sendJson', data);
   }
 };
@@ -44,7 +44,7 @@ const hap = new Hap(socketMock, pluginMock, '031-45-154', config, {});
 describe('combine sensors', () => {
   describe('sync message', () => {
     it('sensors combine', async () => {
-      hap.services = [	// initialize once
+      hap.services = [  // initialize once
         batteryTemp,
         temperatureSensorTemp,
         humiditySensorTemp,
@@ -58,13 +58,14 @@ describe('combine sensors', () => {
       let response: any;
 
       response = hap.types[batteryTemp.type as keyof typeof hap.types].sync(batteryTemp);
-      expect(response).not.toBeDefined();
-
-      response = hap.types[humiditySensorTemp.type as keyof typeof hap.types].sync(humiditySensorTemp);
-      expect(response).not.toBeDefined();
-
-      response = hap.types[temperatureSensorTemp.type as keyof typeof hap.types].sync(temperatureSensorTemp);
       expect(response).toBeDefined();
+      expect(response).toEqual(
+        hap.types[humiditySensorTemp.type as keyof typeof hap.types].sync(humiditySensorTemp)
+      );
+      expect(response).toEqual(
+        hap.types[temperatureSensorTemp.type as keyof typeof hap.types].sync(temperatureSensorTemp)
+      );
+
       expect(response.id).toBe(temperatureSensorTemp.uniqueId);
       expect(response.type).toBe('action.devices.types.SENSOR');
       expect(response.traits).toContain('action.devices.traits.TemperatureControl');
@@ -682,7 +683,7 @@ const contactSensorTemp1: ServiceType = {
     services: [],
     configurationNumber: 1,
   },
-  'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248657',
+  'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248660',
 };
 
 const contactSensorTemp2: ServiceType = {
@@ -736,7 +737,7 @@ const contactSensorTemp2: ServiceType = {
     services: [],
     configurationNumber: 1,
   },
-  'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248658',
+  'uniqueId': '4a1df9989d8d4e7b440455f15d9bdd5326d81f80ccfa753499899864a5248661',
 };
 
 const windowCoveringTemp: ServiceType = {
