@@ -60,10 +60,10 @@ describe('combine sensors', () => {
       response = hap.types[batteryTemp.type as keyof typeof hap.types].sync(batteryTemp);
       expect(response).toBeDefined();
       expect(response).toEqual(
-        hap.types[humiditySensorTemp.type as keyof typeof hap.types].sync(humiditySensorTemp)
+        hap.types[humiditySensorTemp.type as keyof typeof hap.types].sync(humiditySensorTemp),
       );
       expect(response).toEqual(
-        hap.types[temperatureSensorTemp.type as keyof typeof hap.types].sync(temperatureSensorTemp)
+        hap.types[temperatureSensorTemp.type as keyof typeof hap.types].sync(temperatureSensorTemp),
       );
 
       expect(response.id).toBe(temperatureSensorTemp.uniqueId);
