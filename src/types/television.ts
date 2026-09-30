@@ -79,7 +79,7 @@ export class Television extends ghToHap implements ghToHap_t {
     const attributes = {
       commandOnlyOnOff: false,  //OnOff
       queryOnlyOnOff: false,
-      // supportActivityState: !!service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentMediaState),
+      supportActivityState: false,
       supportPlaybackState: !!service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentMediaState),
       transportControlSupportedCommands: service.serviceCharacteristics.find(x => x.uuid === Characteristic.RemoteKey) ?
         [
@@ -230,10 +230,10 @@ export class Television extends ghToHap implements ghToHap_t {
       //   await instance.volumeSelector.find(x => x.uuid === Characteristic.VolumeSelector).setValue(command.execution[0].params.relativeSteps < 0 ? 1 : 0);
       //   return { ids: [service.uniqueId], status: 'SUCCESS' };
       // }
-      case ('action.devices.commands.mute'): 
+      case ('action.devices.commands.mute'):
       case ('action.devices.commands.setVolume'):
       case ('action.devices.commands.volumeRelative'): {
-        return undefined;	// Speaker device will manage
+        return undefined;       // Speaker device will manage
       }
       case ('action.devices.commands.selectChannel'): {
         if (command.execution[0].params?.channelCode) {

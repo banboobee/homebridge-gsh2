@@ -33,12 +33,12 @@ export class Speaker extends ghToHap implements ghToHap_t {
     if (!primaryResponse?.traits.includes('action.devices.traits.OnOff')) {
       traits.push('action.devices.traits.OnOff');
       attributes.commandOnlyOnOff = false;
-      attributes.queryOnlyOnOff = false;
+      attributes.queryOnlyOnOff = !service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active);
     }
     const currentMediaState = service.serviceCharacteristics.find(x => x.uuid === Characteristic.CurrentMediaState);
     if (!primaryResponse?.traits.includes('action.devices.traits.MediaState')) {
       traits.push('action.devices.traits.MediaState');
-      // attributes.supportActivityState = !!currentMediaState;
+      attributes.supportActivityState = false;
       attributes.supportPlaybackState = !!currentMediaState;
     }
     if (!primaryResponse?.traits.includes('action.devices.traits.TransportControl')) {
