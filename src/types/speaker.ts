@@ -117,21 +117,51 @@ export class Speaker extends ghToHap implements ghToHap_t {
     }
     switch (command.execution[0].command) {
       case ('action.devices.commands.OnOff'): {
-        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active).setValue(command.execution[0].params.on ? 1 : 0);
-        return { ids: [service.uniqueId], status: 'SUCCESS' };
+        const active = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Active);
+        if (active) {
+          await active.setValue(command.execution[0].params.on ? 1 : 0);
+          return { ids: [service.uniqueId], status: 'SUCCESS' };
+        } else {
+          return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
+        }
       }
       case ('action.devices.commands.mute'): {
-        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.Mute).setValue(!!command.execution[0].params.mute);
-        return { ids: [service.uniqueId], status: 'SUCCESS' };
+        const mute = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Mute);
+        if (mute) {
+          await mute.setValue(!!command.execution[0].params.mute);
+          return { ids: [service.uniqueId], status: 'SUCCESS' };
+        } else {
+          return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
+        }
       }
-      // case ('action.devices.commands.setVolume'): {  // Not supported
-      // }
+      case ('action.devices.commands.setVolume'): {
+        const volume = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Volume);
+        if (volume) {
+          const volumeLevel = command.execution[0].params.volumeLevel * (100 / 20);
+          await volume.setValue(volumeLevel);
+          return { ids: [service.uniqueId], status: 'SUCCESS' };
+        } else {
+          return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
+        }
+      }
       case ('action.devices.commands.volumeRelative'): {
         // public static readonly INCREMENT = 0;
         // public static readonly DECREMENT = 1;
-        const relativeSteps = command.execution[0].params.relativeSteps;
-        await service.serviceCharacteristics.find(x => x.uuid === Characteristic.VolumeSelector).setValue(relativeSteps < 0 ? 1 : 0);
-        return { ids: [service.uniqueId], status: 'SUCCESS' };
+        const volume = service.serviceCharacteristics.find(x => x.uuid === Characteristic.Volume);
+        const volumeSelector = service.serviceCharacteristics.find(x => x.uuid === Characteristic.VolumeSelector);
+        if (volumeSelector) {
+          const relativeSteps = command.execution[0].params.relativeSteps;
+          if (relativeSteps < 0 && volume?.value && Number(volume.value) <= 0) {
+            return { ids: [service.uniqueId], status: 'ERROR', 'errorCode': 'volumeAlreadyMin', debugString: `unknown command ${command.execution[0].command}` };
+          } else if (relativeSteps > 0 && volume?.value && Number(volume.value) >= 100) {
+            return { ids: [service.uniqueId], status: 'ERROR', 'errorCode': 'volumeAlreadyMax', debugString: `unknown command ${command.execution[0].command}` };
+          } else {
+            await volumeSelector.setValue(relativeSteps < 0 ? 1 : 0);
+            return { ids: [service.uniqueId], status: 'SUCCESS' };
+          }
+        } else {
+          return { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
+        }
       }
       case ('action.devices.commands.mediaStop'):
       case ('action.devices.commands.mediaResume'):
