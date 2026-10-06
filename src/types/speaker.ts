@@ -151,9 +151,9 @@ export class Speaker extends ghToHap implements ghToHap_t {
         const volumeSelector = service.serviceCharacteristics.find(x => x.uuid === Characteristic.VolumeSelector);
         if (volumeSelector) {
           const relativeSteps = command.execution[0].params.relativeSteps;
-          if (relativeSteps < 0 && volume?.value && Number(volume.value) <= 0) {
+          if (relativeSteps < 0 && volume && Number(volume?.value) <= 0) {
             return { ids: [service.uniqueId], status: 'ERROR', errorCode: 'volumeAlreadyMin', debugString: `unknown command ${command.execution[0].command}` };
-          } else if (relativeSteps > 0 && volume?.value && Number(volume.value) >= 100) {
+          } else if (relativeSteps > 0 && volume?.value && Number(volume?.value) >= 100) {
             return { ids: [service.uniqueId], status: 'ERROR', errorCode: 'volumeAlreadyMax', debugString: `unknown command ${command.execution[0].command}` };
           } else {
             await volumeSelector.setValue(relativeSteps < 0 ? 1 : 0);
