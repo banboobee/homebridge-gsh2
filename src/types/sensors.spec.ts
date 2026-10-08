@@ -1,5 +1,5 @@
 import { ServiceType } from '@homebridge/hap-client';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { Hap } from '../hap';
 import { PluginConfig } from '../interfaces';
 
@@ -113,6 +113,23 @@ describe('combine sensors', () => {
       expect(response!.status).toBe('ERROR');
     });
   });
+  describe('report state', () => {
+    beforeEach(() => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('sensors combine', async () => {
+      await hap.reportStateSubject.next(batteryTemp.uniqueId);
+      await sleep(1000); // debounce time
+      const stdout = vi.mocked(console.log).mock.calls;
+      expect(stdout[0][0]).toContain('sendJson');
+      expect(stdout[0][1].type).toBe('report-state');
+      expect(stdout[0][1].body[temperatureSensorTemp.uniqueId]).toHaveProperty('capacityRemaining');
+    });
+  });
 
   describe('sync message', () => {
     it('sensors with switch', async () => {
@@ -165,6 +182,23 @@ describe('combine sensors', () => {
       expect(response.occupancy).toBeDefined();
       expect(response.occupancy).toMatch(/^(OCCUPIED|UNOCCUPIED)$/);
       expect(response.online).toBeDefined();
+    });
+  });
+  describe('report state', () => {
+    beforeEach(() => {
+      vi.spyOn(console, 'log').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('sensors with switch', async () => {
+      await hap.reportStateSubject.next(motionSensorTemp.uniqueId);
+      await sleep(1000); // debounce time
+      const stdout = vi.mocked(console.log).mock.calls;
+      expect(stdout[0][0]).toContain('sendJson');
+      expect(stdout[0][1].type).toBe('report-state');
+      expect(stdout[0][1].body[switchTemp.uniqueId].occupancy).toBe('UNOCCUPIED');
     });
   });
 
@@ -242,6 +276,10 @@ describe('combine sensors', () => {
     });
   });
 });
+
+async function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const batteryTemp: ServiceType = {
   'aid': 23,
