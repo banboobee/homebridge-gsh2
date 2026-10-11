@@ -230,15 +230,15 @@ export class Hap {
           if (response) {
             return response;
           }
-          response = { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
           for (const secondary of Speaker.secondaryServices[service.uniqueId] ?? []) {
-            response = await this.types[secondary.type].execute(secondary, command);
-            response.ids = [service.uniqueId];
-            if (response?.status === 'ERROR') {
-              break;
+            if ((response = await this.types[secondary.type].execute(secondary, command))) {
+              response.ids = [service.uniqueId];
+              if (response.status !== 'SUCCESS') {
+                return response;
+              }
             }
           }
-          return response;
+          return response ?? { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
         }
       }(this);
     });
@@ -687,7 +687,7 @@ export class Hap {
 
     for (const uniqueId of pendingStateReport) {
       const service = this.services.find(x => x.uniqueId === uniqueId);
-      if (!this.types?.[service.type]?.query) {
+      if (!this.types?.[service?.type]?.query) {
         continue;
       }
       // secondary services respond as a primary service.

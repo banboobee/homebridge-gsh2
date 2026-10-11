@@ -145,7 +145,6 @@ describe('speaker', () => {
       response = await speaker.execute(speakerServiceFull, commandVolumeDown);
       expect(response).toBeDefined();
       expect(response.ids).toBeDefined();
-      console.log(response);
       expect(response.errorCode).toBe('volumeAlreadyMin');
       expect(response.status).toBe('ERROR');
 
