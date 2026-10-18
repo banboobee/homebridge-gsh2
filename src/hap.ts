@@ -209,7 +209,7 @@ export class Hap {
         }
 
         query(service, primaryResponse) {
-          const primary = Sensor.primaryService[service.uniqueId];
+          const primary = Speaker.primaryService[service.uniqueId];
           if (primary && !primaryResponse) {
             // upward traversal to find a root node
             const response = this.types[primary.type].query(primary);
@@ -238,7 +238,7 @@ export class Hap {
               }
             }
           }
-          return response ?? { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0].command}` };
+          return response ?? { ids: [service.uniqueId], status: 'ERROR', debugString: `unknown command ${command.execution[0]?.command}` };
         }
       }(this);
     });
