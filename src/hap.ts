@@ -399,28 +399,36 @@ export class Hap {
     // console.log(devices);
     // console.log(devices.length);
 
-    const latestSync: Record<string, any> = this.plugin.platform?.accessory.context.latestSync;
-    if (latestSync) {
-      // console.log(`caching ${Object.keys(latestSync).length} devices.`);
-      for (const x of devices) {          // update sync response
-        latestSync[x.id].sync = x;
+    const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update
+    const latestSync: Record<string, any> = this.plugin.platform?.accessory.context.latestSync ?? {};
+    for (const x of Object.values(latestSync)) {
+      x.unavailable++;
+    }
+    for (const x of devices) { // update sync response
+      latestSync[x.id] = {
+        sync: x,
+        unavailable: 0,
       }
-      for (const x of Object.values(latestSync)) {
-        if (!x.unavailable && !devices.find(y => x.sync.id === y.id)) {
-          if (x.sync.traits) {    // disables pre-merged/unmerged sensors.
-            const sync = x.sync;
-            const {id, type, traits, ..._sync} = sync;
-            x.sync = {
-              id: id,
-              type: type,
-              _traits: traits,
-              ..._sync,
-            };
-          }
+    }
+    const services = new Set(this.services.map(x => x.uniqueId));
+    for (const x of Object.keys(latestSync)) {
+      if (latestSync[x].unavailable > 0) {
+        if (services.has(x)) {
+          // secondary service
+          delete latestSync[x];
+          continue;
         }
-        if (x.unavailable && x.sync?.traits) {    // keep as zombie device
-          devices.push(x.sync);
-          // console.log(x);
+        const response = latestSync[x].sync;
+        const {name} = response.name;
+        const {aid, iid, instanceUsername: username} = response.customData;
+        if (latestSync[x].unavailable > lostlimit) {
+          // delete the device
+          this.log.warn(`Removed accessory '${name}' due to the missed count exceeding the limit ${lostlimit}. username:${username}[${aid}, ${iid}]`);
+          delete latestSync[x];
+        } else {
+          // keep as zombie device
+          this.log.warn(`Failed to find accessory '${name}' ${latestSync[x].unavailable} times. username:${username}[${aid}, ${iid}]`);
+          devices.push(latestSync[x].sync);
         }
       }
     }
@@ -601,58 +609,6 @@ export class Hap {
         };
       });      // The embeded uniqueId formula is different with Hap Client
       this.log.debug(`Returned ${services.length} accessories from Homebridge - post filter`);
-
-      const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update
-      const latestSync: Record<string, any> = this.plugin.platform?.accessory.context.latestSync;
-      if (latestSync) {
-        for (const x of Object.values(latestSync)) {
-          x.unavailable++;
-        }
-        for (const x of services) {
-          if (!this.types?.[x.type]?.sync) {      // speaker, inputSource...
-            continue;
-          }
-          if (!latestSync[x.uniqueId]) {          // new device
-            this.log.debug(`Found new accessory '${x.serviceName}'. aid:${x.aid}, iid:${x.iid}, username:${x.instance.username}`);
-            latestSync[x.uniqueId] = {          // save original for future removal
-              sync: {
-                id: x.uniqueId,
-                name: {
-                  name: x.serviceName,
-                },
-                customData: {
-                  aid: x.aid,
-                  iid: x.iid,
-                  instanceUsername: x.instance.username,
-                },
-              },
-              unavailable: 0,
-            };
-          } else {                                // consistent device
-            latestSync[x.uniqueId].unavailable = 0;
-          }
-        }
-      }
-      this.unavailableServiceCount = 0;
-      for (const x of Object.keys(latestSync ?? [])) {
-        if (!latestSync[x]?.unavailable) {      // consistent or wrong record
-          continue;
-        }
-        const response = latestSync[x]?.sync;   // inconsistent records
-        const name = response?.name.name;
-        const aid = response?.customData.aid;
-        const iid = response?.customData.iid;
-        const username = response?.customData.instanceUsername;
-        if (latestSync[x].unavailable > lostlimit) {  // delete the device
-          this.log.warn(`Removed accessory '${name}' due to exceeding missed count limit ${lostlimit}. aid:${aid}, iid:${iid}, username:${username}`);
-          delete latestSync[x];
-        } else if (latestSync[x].unavailable) {     // keep as zombie device
-          this.log.warn(`Failed to find accessory '${name}' ${latestSync[x].unavailable} times. aid:${aid}, iid:${iid}, username:${username}`);
-          this.unavailableServiceCount++;
-        }
-      }
-      // console.log(`unavailableServiceCount: ${this.unavailableServiceCount}`);
-
       return services;
     }).catch((e) => {
       if (e.response?.status === 401) {
