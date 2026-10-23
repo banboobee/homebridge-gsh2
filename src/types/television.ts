@@ -27,6 +27,8 @@ export class Television extends ghToHap implements ghToHap_t {
 
     // console.log(`${service.type}: ${service.instance.username}, aid:${service.aid}, iid:${service.iid}, name: ${service.serviceName}`);
     const services = this.hap.services.filter(x => x.aid === service.aid && x.instance.username === service.instance.username) ?? [];
+    const locale = new Intl.Locale(Intl.DateTimeFormat().resolvedOptions().locale);
+    const language = locale?.language ?? 'en';
 
     instance.channels = [];
     instance.inputs = [];
@@ -105,7 +107,7 @@ export class Television extends ghToHap implements ghToHap_t {
           key: '_tv',   //dummy for stations
           names: [
             {
-              lang: 'en',
+              lang: language,
               name_synonym: [
                 '_tv',
               ],
@@ -118,7 +120,7 @@ export class Television extends ghToHap implements ghToHap_t {
           key: c.serviceName,
           names: [
             {
-              lang: 'en',
+              lang: language,
               name_synonym: [
                 c.ConfiguredName,
               ],
