@@ -123,6 +123,7 @@ export class Plugin {
     this.log.debug(JSON.stringify(body, null, 2));
 
     const devices = await this.hap.buildSyncResponse() as any[];
+    await this.hap.verifySyncResponse(devices); // devices may be updated.
 
     if (!devices.length) {
       this.log.warn('No supported devices found. See https://git.io/JfuHW');

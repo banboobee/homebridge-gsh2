@@ -280,7 +280,7 @@ export class Hap {
     const hapConfig: Config = {
       debug: this.config.debug,
       instanceBlacklist: this.instanceBlacklist,
-      discoveryTimeout: this.configDiscoveryTimeout * 1000,
+      // discoveryTimeout: this.configDiscoveryTimeout * 1000,
     };
 
     this.hapClient = new HapClient({
@@ -399,6 +399,10 @@ export class Hap {
     // console.log(devices);
     // console.log(devices.length);
 
+    return devices;
+  }
+
+  async verifySyncResponse(devices: SmartHomeV1SyncDevices[]) {
     const lostlimit = 96; // keep 1 day assuming 15 mins. interval to update
     const latestSync: Record<string, any> = this.plugin.platform?.accessory.context.latestSync ?? {};
     for (const x of Object.values(latestSync)) {
@@ -423,7 +427,7 @@ export class Hap {
         const {aid, iid, instanceUsername: username} = response.customData;
         if (latestSync[x].unavailable > lostlimit) {
           // delete the device
-          this.log.warn(`Removed accessory '${name}' due to the missed count exceeding the limit ${lostlimit}. username:${username}[${aid}, ${iid}]`);
+          this.log.warn(`Removed accessory '${name}' due to exceeding the missed count limit ${lostlimit}. username:${username}[${aid}, ${iid}]`);
           delete latestSync[x];
         } else {
           // keep as zombie device
