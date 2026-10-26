@@ -31,16 +31,16 @@ export class HomebridgeGoogleSmartHome {
 
   configureAccessory(accessory: PlatformAccessory) {
     this.log.info('Loading accessory from cache:', accessory.displayName);
-    
+
     this.accessories.set(accessory.UUID, accessory);
   }
-  
+
   async start() {
     const homebridgeConfig = await fs.readJson(
       path.resolve(this.api.user.configPath()),
     );
     const uuid = this.api.hap.uuid.generate(`${PLUGIN_NAME}`);
-    
+
     this.accessory = this.accessories.get(uuid);
     if (!this.accessory) {
       this.accessory = new this.api.platformAccessory(`${PLUGIN_NAME}`, uuid);
@@ -65,7 +65,7 @@ export class HomebridgeGoogleSmartHome {
     const hostname = os.hostname();
     const service: typeof Service = this.api.hap.Service;
     const characteristic: typeof Characteristic = this.api.hap.Characteristic;
-    
+
     this.accessory
       .getService(service.AccessoryInformation)
       .setCharacteristic(characteristic.Manufacturer, `${PLUGIN_NAME}`)
@@ -91,12 +91,10 @@ export class HomebridgeGoogleSmartHome {
           const latestSync: Record<string, any> = this.plugin.platform.accessory.context.latestSync;
           for (const y of Object.keys(latestSync as Record<string, any>)) {
             if (latestSync[y].unavailable) {
-              const name = latestSync[y].sync?.name.name;
-              const aid = latestSync[y].sync?.customData.aid;
-              const iid = latestSync[y].sync?.customData.iid;
-              const username = latestSync[y].sync?.customData.instanceUsername;
+              const {name} = latestSync[y].sync.name;
+              const {aid, iid, instanceUsername: username} = latestSync[y].sync.customData;
               delete this.plugin.platform.accessory.context.latestSync[y];
-              this.log.info(`Removed outdated accessory '${name}'. aid:${aid}, iid:${iid}, username:${username}`);
+              this.log.info(`Removed outdated accessory '${name}'. username:${username}[${aid}, ${iid}]`);
             }
           }
           this.plugin.hap.requestSync();
