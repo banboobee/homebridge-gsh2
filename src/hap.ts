@@ -316,9 +316,9 @@ export class Hap {
         }
       }
     }
-    if (this.ready === false) {
-      return;   // currently initializing. May loose this instance.
-    }
+    // if (this.ready === false) {
+    //   return;   // currently initializing. May loose this instance.
+    // }
 
     // Clear any existing timeout
     if (this.discoveryTimeout) {
@@ -329,6 +329,10 @@ export class Hap {
     // Set up the timeout
     this.discoveryTimeout = setTimeout(() => {
       this.log.debug('No more instances discovered, publishing services');
+      if (this.ready === false) {
+	this.log.warn('Service initialization is in progress, waiting for completion.');
+	return this.waitForNoMoreDiscoveries();
+      }
       // this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
       this.start();
       this.requestSync();
@@ -340,6 +344,10 @@ export class Hap {
    * Start processing
    */
   async start() {
+    if (this.ready === false) {
+      this.log.error('Service initialization is currently in progress.');
+      return;
+    }
     this.ready = false;
     if (this.cachedInstances.length > 0) {
       this.log.info(`Discovered ${this.discoveredInstances.length} out of ${this.cachedInstances.length} cached homebridge instances.`);
@@ -351,9 +359,7 @@ export class Hap {
     this.monitor?.finish();
     this.services = await this.loadAccessories();
     this.log.info(`Discovered ${this.services.length} accessories`);
-    this.ready = true;
     await this.buildSyncResponse();
-    // this.requestSync();
     const evServices: ServiceType[] = this.services.filter(x => this.evTypes.some(uuid => x.serviceCharacteristics.find(c => c.uuid === uuid)));
     this.log.debug(`Monitoring ${evServices.length} services for changes`);
 
@@ -366,6 +372,7 @@ export class Hap {
       });
       // this.reportStateSubject.next(services[0].uniqueId);
     });
+    this.ready = true;
 
     if (this.unavailableServiceCount > 0) {
       this.startTimeout = setTimeout(() => {
