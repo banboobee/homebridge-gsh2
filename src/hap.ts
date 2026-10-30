@@ -330,8 +330,8 @@ export class Hap {
     this.discoveryTimeout = setTimeout(() => {
       this.log.debug('No more instances discovered, publishing services');
       if (this.ready === false) {
-	this.log.warn('Service initialization is in progress, waiting for completion.');
-	return this.waitForNoMoreDiscoveries();
+        this.log.warn('Service initialization is in progress, waiting for completion.');
+        return this.waitForNoMoreDiscoveries();
       }
       // this.hapClient.removeListener('instance-discovered', this.waitForNoMoreDiscoveries);
       this.start();
